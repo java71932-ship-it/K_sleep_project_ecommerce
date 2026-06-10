@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: ecommerce-web-app
+    env: docker
+    plan: free
+    rootDirectory: Ecommerce/demo
+    envVars:
+      - key: PORT
+        value: 1234
+      - key: DB_HOST
+        fromDatabase:
+          name: ecommerce-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: ecommerce-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: ecommerce-db
+          property: database
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: ecommerce-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: ecommerce-db
+          property: password
+      - key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+        value: org.postgresql.Driver
+      - key: SPRING_JPA_DATABASE_PLATFORM
+        value: org.hibernate.dialect.PostgreSQLDialect
+      - key: PROJECT_IMAGE_PATH
+        value: /app/images/
+      - key: SPRING_MAIL_USERNAME
+        value: rockh7189@gmail.com
+      - key: SPRING_MAIL_PASSWORD
+        value: ncaf nqcm hoxy hjts
+
+databases:
+  - name: ecommerce-db
+    plan: free
