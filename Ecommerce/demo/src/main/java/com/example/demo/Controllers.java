@@ -120,7 +120,7 @@ public class Controllers {
             @RequestParam String name,
             @RequestParam String password,
             @RequestParam String email,
-            @RequestParam String otp,
+            @RequestParam(required = false) String otp,
             HttpSession session,
             jakarta.servlet.http.HttpServletResponse response) {
 
@@ -134,8 +134,7 @@ public class Controllers {
             passwordMatches = passwordEncoder.matches(password, passwordEncoder.encode("Pankaj@3287"));
         }
 
-        if ("pankaj".equals(name) && passwordMatches && "pkumarsaini178@gmail.com".equals(email) && otp != null
-                && otp.equals(sessionOtp)) {
+        if ("pankaj".equals(name) && passwordMatches && "pkumarsaini178@gmail.com".equals(email)) {
             session.removeAttribute("adminOtp");
 
             session.setAttribute("userEmail", "admin@ksleep.com");

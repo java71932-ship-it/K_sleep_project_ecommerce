@@ -217,18 +217,9 @@ input:focus{
 
     <div class="form-group">
       <label class="form-label">Email Address</label>
-      <div class="input-wrap" style="display: flex; gap: 10px; position: relative;">
-        <span class="input-icon" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%);">◉</span>
-        <input type="email" name="email" id="adminEmail" placeholder="Enter email address" required style="flex: 1; padding: 14px 16px 14px 44px;">
-        <button type="button" id="sendOtpBtn" onclick="sendOTP()" style="width: auto; background: var(--gold); color: var(--ink); border: none; padding: 14px 20px; font-size: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; transition: all 0.3s; clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);">Send OTP</button>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">OTP Verification</label>
       <div class="input-wrap">
-        <span class="input-icon">⬢</span>
-        <input type="text" name="otp" id="otpField" placeholder="Enter 6-digit OTP" maxlength="6" required>
+        <span class="input-icon">◉</span>
+        <input type="email" name="email" id="adminEmail" placeholder="Enter email address" required>
         <div class="focus-line"></div>
       </div>
     </div>
