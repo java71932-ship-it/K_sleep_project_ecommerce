@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cancel Order</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans, system-ui, sans-serif);
+      background: var(--color-background-tertiary, #f5f5f0);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .card {
+      background: var(--color-background-primary, #fff);
+      border: 0.5px solid var(--color-border-tertiary, rgba(0, 0, 0, 0.15));
+      border-radius: 16px;
+      padding: 2rem 2.25rem;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 0.5px solid var(--color-border-tertiary, rgba(0, 0, 0, 0.12));
+    }
+
+    .icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #FCEBEB;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .icon-wrap svg {
+      width: 20px;
+      height: 20px;
+      stroke: #A32D2D;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    h1 {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--color-text-primary, #111);
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--color-text-secondary, #666);
+      margin-top: 2px;
+    }
+
+    .order-info {
+      background: var(--color-background-secondary, #f7f7f4);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 2rem;
+    }
+
+    .info-item label {
+      font-size: 12px;
+      color: var(--color-text-secondary, #888);
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .info-item span {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-primary, #111);
+    }
+
+    .field {
+      margin-bottom: 1.25rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-secondary, #555);
+      margin-bottom: 6px;
+    }
+
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 0.5px solid var(--color-border-secondary, rgba(0, 0, 0, 0.25));
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: var(--color-background-primary, #fff);
+      color: var(--color-text-primary, #111);
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    .field select:focus,
+    .field textarea:focus {
+      border-color: #E24B4A;
+      box-shadow: 0 0 0 2px rgba(226, 75, 74, 0.12);
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 88px;
+      line-height: 1.5;
+    }
+
+    .field .hint {
+      font-size: 12px;
+      color: var(--color-text-tertiary, #aaa);
+      margin-top: 4px;
+    }
+
+    .required {
+      color: #E24B4A;
+      margin-left: 2px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 1.75rem;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      border: 0.5px solid var(--color-border-secondary, rgba(0, 0, 0, 0.2));
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-secondary, #555);
+    }
+
+    .btn-ghost:hover {
+      background: var(--color-background-secondary, #f5f5f0);
+    }
+
+    .btn-danger {
+      background: #E24B4A;
+      color: #fff;
+      border-color: #E24B4A;
+    }
+
+    .btn-danger:hover {
+      opacity: 0.88;
+    }
+
+    .btn-danger:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .alert {
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 1.25rem;
+      display: none;
+    }
+
+    .alert-error {
+      background: #FCEBEB;
+      color: #791F1F;
+      border: 0.5px solid #F7C1C1;
+    }
+
+    .alert-success {
+      background: #EAF3DE;
+      color: #27500A;
+      border: 0.5px solid #C0DD97;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="icon-wrap">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <line x1="15" y1="9" x2="9" y2="15" />
+          <line x1="9" y1="9" x2="15" y2="15" />
+        </svg>
+      </div>
+      <div>
+        <h1>Cancel order</h1>
+        <p class="subtitle">This action cannot be undone</p>
+      </div>
+    </div>
+
+    <div class="order-info">
+      <div class="info-item">
+        <label>Order ID</label>
+        <span id="display-order-id">#—</span>
+      </div>
+      <div class="info-item">
+        <label>Placed on</label>
+        <span id="display-date">—</span>
+      </div>
+      <div class="info-item">
+        <label>Status</label>
+        <span style="color:#BA7517;">Processing</span>
+      </div>
+    </div>
+
+    <div id="alert-box" class="alert alert-error"></div>
+
+    <div class="field">
+      <label for="reason">Cancellation reason <span class="required">*</span></label>
+      <select id="reason">
+        <option value="">Select a reason…</option>
+        <option value="CHANGED_MIND">Changed my mind</option>
+        <option value="WRONG_ITEM">Ordered wrong item</option>
+        <option value="FOUND_BETTER_PRICE">Found better price</option>
+        <option value="DELIVERY_TOO_LONG">Delivery time too long</option>
+        <option value="DUPLICATE_ORDER">Duplicate order</option>
+        <option value="OTHER">Other</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="comment">Additional comment <span
+          style="font-weight:400;color:var(--color-text-tertiary)">(optional)</span></label>
+      <textarea id="comment" placeholder="Tell us more about your reason…"></textarea>
+      <p class="hint">Max 500 characters</p>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="goBack()">Keep order</button>
+      <button class="btn btn-danger" id="cancel-btn" onclick="submitCancel()">Cancel order</button>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('id') || '1042';
+    const dateParam = params.get('date');
+
+    document.getElementById('display-order-id').textContent = '#' + orderId;
+
+    let displayDate = new Date();
+    if (dateParam && dateParam !== 'null' && dateParam !== 'undefined') {
+      displayDate = new Date(dateParam);
+    }
+    document.getElementById('display-date').textContent = displayDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    function showAlert(msg, type) {
+      const box = document.getElementById('alert-box');
+      box.textContent = msg;
+      box.className = 'alert alert-' + type;
+      box.style.display = 'block';
+    }
+
+    function goBack() {
+      window.history.back();
+    }
+
+    async function submitCancel() {
+      const reason = document.getElementById('reason').value;
+      const comment = document.getElementById('comment').value.trim();
+      const btn = document.getElementById('cancel-btn');
+
+      if (!reason) {
+        showAlert('Please select a cancellation reason.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Cancelling…';
+
+      try {
+        let url = `/cancelOrder?id=${encodeURIComponent(orderId)}&reason=${encodeURIComponent(reason)}`;
+        if (comment) url += `&comment=${encodeURIComponent(comment)}`;
+
+        const res = await fetch(url, { method: 'POST', credentials: 'include' });
+
+        if (res.redirected && res.url.includes('login')) {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        if (res.ok) {
+          showAlert('Order cancelled successfully. Redirecting…', 'success');
+          document.getElementById('alert-box').className = 'alert alert-success';
+          document.getElementById('alert-box').style.display = 'block';
+          setTimeout(() => window.location.href = 'order.html', 1800);
+        } else {
+          const text = await res.text();
+          showAlert(text || 'Something went wrong. Please try again.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Cancel order';
+        }
+      } catch (err) {
+        showAlert('Network error. Please check your connection.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Cancel order';
+      }
+    }
+  </script>
+</body>
+
+</html>
