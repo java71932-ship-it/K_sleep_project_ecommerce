@@ -580,7 +580,7 @@ fetch('/api/check-login', { credentials: 'include' })
   .then(status => {
     isLoggedIn = status.loggedIn;
     if (isLoggedIn) {
-      return fetch('/orderDeatail', { credentials: 'include' });
+      return fetch('/orderDetail', { credentials: 'include' });
     } else {
       renderOrders([]);
       throw new Error("NOT_LOGGED_IN");
@@ -588,6 +588,10 @@ fetch('/api/check-login', { credentials: 'include' })
   })
   .then(res => {
     if (res) {
+      if (res.status === 401) {
+        window.location.href = 'login.html';
+        throw new Error("NOT_LOGGED_IN");
+      }
       if(!res.ok) throw new Error('HTTP '+res.status);
       return res.json();
     }

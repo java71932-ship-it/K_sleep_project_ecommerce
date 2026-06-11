@@ -263,7 +263,7 @@
             <li><a href="/admin/customers" class="menu-link">◈ Customer Profiles</a></li>
             <li><a href="/admin/analytics" class="menu-link">◈ Sales Analytics</a></li>
             <li><a href="/admin/reports" class="menu-link active">◈ Reports & Stats</a></li>
-            <li><a href="/login.html" class="menu-link logout-btn" onclick="document.cookie='jwt=; Max-Age=0; path=/;';">Logout</a></li>
+            <li><a href="/login.html" class="menu-link logout-btn" onclick="event.preventDefault(); fetch('/logout', { method: 'POST' }).then(() => window.location.href='/login.html');">Logout</a></li>
         </ul>
     </div>
 

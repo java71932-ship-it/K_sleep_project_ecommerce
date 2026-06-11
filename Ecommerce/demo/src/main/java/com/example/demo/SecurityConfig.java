@@ -68,7 +68,7 @@ public class SecurityConfig {
                     "/starting", "/css/**", "/js/**", "/webjars/**", "/sendContactEmail",
                     "/admin/sendOtp", "/fulldeatailprodect.html", "/paymentgatvey.html",
                     "/placeOrder", "/senddeatailEmail", "/api/check-login",
-                    "/order.html", "/orderDeatail", "/cancaleorder.html"
+                    "/order.html", "/orderDetail", "/cancaleorder.html", "/logout"
                 ).permitAll()
                 // Admin paths
                 .requestMatchers("/admin/**", "/prodectadd.html", "/prodectlist.html", "/insertproductdata").hasRole("ADMIN")

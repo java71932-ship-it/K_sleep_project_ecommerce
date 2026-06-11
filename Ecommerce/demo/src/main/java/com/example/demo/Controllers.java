@@ -489,14 +489,26 @@ public class Controllers {
             @RequestParam Long product_id,
             @RequestParam String image,
             @RequestParam int qty,
-            Authentication authentication) {
+            HttpServletRequest request) {
 
-        // ✅ KEY LINE — read email from Authentication (set during login)
-        String sessionEmail = (authentication != null && authentication.isAuthenticated()
-                && !"anonymousUser".equals(authentication.getName()))
-                        ? authentication.getName()
-                        : null;
-        String finalEmail = sessionEmail != null ? sessionEmail : email;
+        // Step 1: JWT cookie se token nikalo
+        String token = jwtTokenProvider.getTokenFromRequest(request);
+
+        // Step 2: Token null ya invalid hai toh SEEDHA REJECT karo
+        if (token == null || !jwtTokenProvider.validateToken(token)) {
+            return "redirect:/login.html?error=unauthorized";
+        }
+
+        // Step 3: Token se email nikalo
+        String sessionEmail = jwtTokenProvider.getEmailFromToken(token);
+
+        // Step 4: Email null check
+        if (sessionEmail == null || sessionEmail.trim().isEmpty()) {
+            return "redirect:/login.html?error=unauthorized";
+        }
+
+        // Step 5: Enforce strict token email
+        String finalEmail = sessionEmail.trim();
 
         orderEntity order = new orderEntity();
         order.setCustomerName(username);
@@ -531,7 +543,7 @@ public class Controllers {
         // ✅ send confirmation email AFTER save
         try {
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
+            message.setTo(finalEmail);
             message.setSubject("✦ Order Confirmed — KSleep");
             message.setText(
                     "Hello " + username + ",\n\n" +
@@ -567,22 +579,33 @@ public class Controllers {
         return "redirect:/order.html"; // ✅ go to My Orders page
     }
 
-    @GetMapping("/orderDeatail")
+    @GetMapping("/orderDetail")
     @ResponseBody
-    public List<orderEntity> orderDetail(Authentication authentication) {
+    public ResponseEntity<?> orderDetail(HttpServletRequest request) {
+        // Step 1: Token nikalo
+        String token = jwtTokenProvider.getTokenFromRequest(request);
 
-        // ✅ reads email from Authentication (set during login)
-        String email = (authentication != null && authentication.isAuthenticated()
-                && !"anonymousUser".equals(authentication.getName()))
-                        ? authentication.getName()
-                        : null;
-
-        if (email == null) {
-            return List.of(); // not logged in — return empty
+        // Step 2: Token null check
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: No session found. Please login.");
         }
 
-        // ✅ returns ONLY this user's orders
-        return or.findByEmail(email);
+        // Step 3: Token validate karo (catch expiry/invalid)
+        if (!jwtTokenProvider.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Session expired. Please login again.");
+        }
+
+        // Step 4: Email nikalo
+        String email = jwtTokenProvider.getEmailFromToken(token);
+
+        // Step 5: Email null check
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Could not read user data.");
+        }
+
+        // Step 6: Sirf us email ke orders return karo
+        List<orderEntity> orders = or.findByEmail(email.trim());
+        return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/api/check-login")
@@ -600,47 +623,36 @@ public class Controllers {
     }
 
     @PostMapping({ "/cancelOrder", "/cnacelOrder" })
-    public String cancelOrder(@RequestParam Long id,
+    @ResponseBody
+    public ResponseEntity<String> cancelOrder(@RequestParam Long id,
             @RequestParam String reason,
             @RequestParam(required = false) String comment,
-            jakarta.servlet.http.HttpServletRequest request) {
+            HttpServletRequest request) {
 
-        // ─── Step 1: Token lo request se ────────────
+        // Step 1: Token nikalo aur validate karo
         String token = jwtTokenProvider.getTokenFromRequest(request);
-
-        // ─── Step 2: Token check karo ───────────────
         if (token == null || !jwtTokenProvider.validateToken(token)) {
-            return "redirect:/login.html";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Please login again.");
         }
 
-        // ─── Step 3: Email nikalo token se ──────────
+        // Step 2: Email nikalo
         String email = jwtTokenProvider.getEmailFromToken(token);
-        System.out.println("User Email for cancel order: " + email); // ✅
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Invalid token data.");
+        }
 
+        // Step 3: Fetch order aur check ownership
         orderEntity order = or.findById(id).orElse(null);
-
         if (order == null) {
-            return "redirect:/order.html";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found.");
         }
 
-        // ─── Step 4: Email fallback ───────────────
-        if (email == null || email.trim().isEmpty()) {
-            email = order.getEmail();
-        }
-        if (email == null || email.trim().isEmpty()) {
-            email = "pkumarsaini178@gmail.com";
-        }
-
-        // ─── Step 5: Ownership check ──────────────
         if (order.getEmail() != null && !email.equalsIgnoreCase(order.getEmail().trim())) {
-            System.out.println("OWNERSHIP MISMATCH: JWT email=" + email + ", Order email=" + order.getEmail());
-            return "redirect:/order.html?error=unauthorized";
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Forbidden: This order does not belong to you.");
         }
 
         /* order details */
-
         String name = order.getCustomerName() != null ? order.getCustomerName() : "Customer";
-
         String productname = order.getProductName() != null ? order.getProductName() : "Product";
         Long productid = order.getProductId() != null ? order.getProductId() : 0L;
         String address = order.getAddress() != null ? order.getAddress() : "Address not specified";
@@ -649,24 +661,18 @@ public class Controllers {
         String date = order.getOrderDate() != null ? order.getOrderDate().toString() : "N/A";
 
         /* mail content */
-
         String detail = "Hello " + name + ",\n\n" +
                 "Your order has been cancelled successfully.\n\n" +
-
                 "Product Details:\n" +
                 "Product Name : " + productname + "\n" +
                 "Product ID : " + productid + "\n" +
                 "Price : ₹" + price + "\n\n" +
-
                 "Delivery Address:\n" +
                 address + "\n\n" +
                 "Mobile No : " + mobileno + "\n" +
-
                 "Order Date : " + date + "\n\n" +
-
                 "Cancellation Reason : " + reason + "\n" +
                 "Additional Comment : " + (comment != null ? comment : "None") + "\n\n" +
-
                 "Thank you.";
 
         /* send mail using JavaMailSender */
@@ -675,17 +681,27 @@ public class Controllers {
             message.setTo(email);
             message.setSubject("Order Cancellation Confirmation");
             message.setText(detail);
-
             emailsender.send(message);
         } catch (Exception e) {
             System.out.println("Error sending cancellation email: " + e.getMessage());
         }
 
-        /* update status to cancelled instead of deleting the order */
+        /* update status to cancelled */
         order.setStatus("cancelled");
         or.save(order);
 
-        return "redirect:/order.html";
+        return ResponseEntity.ok("Order cancelled successfully.");
+    }
+
+    @PostMapping("/logout")
+    @ResponseBody
+    public ResponseEntity<String> logout(jakarta.servlet.http.HttpServletResponse response) {
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("jwt", "");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+        return ResponseEntity.ok("Logged out.");
     }
 
     @PostMapping("/sendContactEmail")
