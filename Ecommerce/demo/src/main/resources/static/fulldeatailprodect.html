@@ -145,10 +145,25 @@ header{position:fixed;top:0;width:100%;padding:20px 6%;display:flex;justify-cont
 #toast.show{transform:translateX(-50%) translateY(0);}
 #toast .toast-gold{color:var(--gold);}
 
-@media(max-width:768px){
+@media(max-width:900px){
+  #cursor, #cursor-ring { display: none !important; }
+  body { cursor: auto; }
   .wrapper{flex-direction:column;gap:40px;padding:100px 4% 60px;}
   .image-panel{position:static;}
   .specs{grid-template-columns:1fr;}
+}
+
+@media(max-width:500px){
+  .wrapper { padding: 90px 5% 40px; gap: 30px; }
+  .main-image-wrap { height: 320px; }
+  .thumbnails { justify-content: center; }
+  .thumb { width: 60px; height: 60px; }
+  .prod-name { font-size: 32px; }
+  .price-main { font-size: 36px; }
+  .btn-row { flex-direction: column; width: 100%; gap: 12px; }
+  .btn-cart { width: 100%; clip-path: none; border-radius: 4px; }
+  .btn-wish { width: 100%; height: 48px; border-radius: 4px; }
+  .trust-row { justify-content: center; text-align: center; }
 }
 </style>
 </head>
@@ -259,15 +274,23 @@ window.addEventListener('load', () => {
 // ── CURSOR ──
 const cur = document.getElementById('cursor'), ring = document.getElementById('cursor-ring');
 let mx=0, my=0, rx=0, ry=0;
-document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
-(function animRing(){ rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing); })();
+document.addEventListener('mousemove', e => {
+  if (window.innerWidth <= 900) return;
+  mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px';
+});
+(function animRing(){
+  if (window.innerWidth <= 900) return;
+  rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing);
+})();
 
 // ── PARTICLES ──
 const pc = document.getElementById('particles');
-for(let i=0; i<20; i++){
-  const p = document.createElement('div'); p.className='particle';
-  p.style.cssText=`left:${Math.random()*100}%;--dur:${6+Math.random()*12}s;--delay:${Math.random()*10}s;--dx:${(Math.random()-0.5)*60}px;`;
-  pc.appendChild(p);
+if (window.innerWidth > 900 && pc) {
+  for(let i=0; i<20; i++){
+    const p = document.createElement('div'); p.className='particle';
+    p.style.cssText=`left:${Math.random()*100}%;--dur:${6+Math.random()*12}s;--delay:${Math.random()*10}s;--dx:${(Math.random()-0.5)*60}px;`;
+    pc.appendChild(p);
+  }
 }
 
 // ── PRODUCT STATE — all data stored here for passing to payment ──

@@ -210,6 +210,28 @@ opacity:1;
 transform:translateY(0);
 }
 
+/* ── RESPONSIVE NAVBAR ── */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 26px;
+  height: 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+  padding: 0;
+}
+.menu-toggle span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--gold);
+  transition: all 0.3s ease;
+  transform-origin: left center;
+}
+
 @media(max-width:900px){
 .contact-wrapper{
 grid-template-columns:1fr;
@@ -217,6 +239,33 @@ grid-template-columns:1fr;
 .hero h1{
 font-size:40px;
 }
+
+.menu-toggle { display: flex; }
+header nav {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw; height: 100vh;
+  background: var(--ink);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  z-index: 1000;
+  padding: 100px 0;
+}
+header nav.active { display: flex; }
+nav a { font-size: 18px; letter-spacing: 3px; margin: 0; }
+.menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translateY(-2px); }
+.menu-toggle.active span:nth-child(2) { width: 0%; opacity: 0; }
+.menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translateY(2px); }
+}
+
+@media(max-width:500px){
+  .section { padding: 60px 5%; }
+  .contact-form { padding: 24px; }
+  .contact-info h2 { font-size: 30px; }
+  .hero h1 { font-size: 32px; }
 }
 
 </style>
@@ -226,9 +275,14 @@ font-size:40px;
 
 <header>
 <div class="logo">KSleep</div>
-<nav>
+<button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+<nav id="navMenu">
 <a href="index.html">Home</a>
-<a href="openProduct.html">Product</a>
+<a href="openProduct.html">Products</a>
 <a href="B2b.html">B2B</a>
 <a href="about.html">About</a>
 <a href="#">Contact</a>
@@ -315,6 +369,33 @@ font-size:40px;
 </footer>
 
 <script>
+// ── MOBILE MENU TOGGLE ──
+const menuToggle = document.getElementById('menuToggle');
+const navMenu = document.getElementById('navMenu');
+
+if (menuToggle && navMenu) {
+  menuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuToggle.classList.toggle('active');
+    navMenu.classList.toggle('active');
+  });
+
+  // Close when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    }
+  });
+}
 
 //////////////////////////////////////////////////////
 // SCROLL REVEAL

@@ -67,14 +67,9 @@ a { text-decoration: none; color: inherit; }
   pointer-events: none;
 }
 
-/* ── GRAIN ── */
+/* ── GRAIN ── (Disabled for major performance improvement) */
 body::after {
-  content: '';
-  position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  opacity: 0.03;
-  pointer-events: none;
-  z-index: 9997;
+  display: none;
 }
 
 /* ── NAVBAR ── */
@@ -343,18 +338,78 @@ footer { position: relative; z-index: 2; background: var(--deep); padding: 80px 
 /* ── SCROLL REVEAL CLASSES ── */
 .reveal { opacity: 0; transform: translateY(36px); }
 
-/* ── RESPONSIVE ── */
+/* ── RESPONSIVE NAVBAR ── */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 26px;
+  height: 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+  padding: 0;
+}
+.menu-toggle span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--gold);
+  transition: all 0.3s ease;
+  transform-origin: left center;
+}
+
+/* ── SKELETON SHIMMER ── */
+.skeleton {
+  background: linear-gradient(90deg, var(--card-bg) 25%, rgba(201,168,76,0.08) 50%, var(--card-bg) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 @media (max-width: 900px) {
-  nav { display: none; }
+  body { cursor: auto; }
+  .cursor, .cursor-ring { display: none !important; }
+  #bg-canvas { background: radial-gradient(circle at center, var(--deep) 0%, var(--ink) 100%); }
+  
+  .menu-toggle { display: flex; }
+  header nav {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw; height: 100vh;
+    background: var(--ink);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    z-index: 1000;
+    padding: 100px 0;
+  }
+  header nav.active { display: flex; }
+  nav a { font-size: 18px; letter-spacing: 3px; margin: 0; }
+  .menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translateY(-2px); }
+  .menu-toggle.active span:nth-child(2) { width: 0%; opacity: 0; }
+  .menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translateY(2px); }
+  
   .product-grid { grid-template-columns: 1fr 1fr; }
   .footer-top { grid-template-columns: 1fr 1fr; gap: 40px; }
   .filter-wrap { flex-direction: column; align-items: stretch; padding: 24px; }
   .search-wrap { max-width: 100%; }
   #sortSelect { min-width: 100%; }
 }
-@media (max-width: 560px) {
+
+@media (max-width: 500px) {
   .product-grid { grid-template-columns: 1fr; }
-  .footer-top { grid-template-columns: 1fr; }
+  .footer-top { grid-template-columns: 1fr; text-align: center; gap: 30px; }
+  .footer-brand p { margin: 0 auto; }
+  .hero h1 { font-size: 34px; }
+  .hero-eyebrow { letter-spacing: 3px; margin-bottom: 16px; }
+  .hero-sub { font-size: 14px; }
 }
 </style>
 </head>
@@ -370,7 +425,12 @@ footer { position: relative; z-index: 2; background: var(--deep); padding: 80px 
 <!-- NAVBAR -->
 <header id="header">
   <div class="logo">KSleep</div>
-  <nav>
+  <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+  <nav id="navMenu">
     <a href="index.html">Home</a>
     <a href="openProduct.html" class="active">Products</a>
     <a href="B2b.html">B2B</a>
@@ -411,7 +471,7 @@ footer { position: relative; z-index: 2; background: var(--deep); padding: 80px 
 
 <!-- PRODUCTS -->
 <section class="products-section">
-  <div class="loading-state" id="loadingState">
+  <div class="loading-state" id="loadingState" style="display: none;">
     <div class="loader"></div>
     <p>Loading Collection</p>
   </div>
@@ -419,7 +479,39 @@ footer { position: relative; z-index: 2; background: var(--deep); padding: 80px 
     <h3>No Products Found</h3>
     <p>Try adjusting your search</p>
   </div>
-  <div class="product-grid" id="productContainer"></div>
+  <div class="product-grid" id="productContainer">
+    <!-- Skeleton cards -->
+    <div class="product-card skeleton-card">
+      <div class="card-img-wrap skeleton" style="height: 260px;"></div>
+      <div class="card-content">
+        <span class="skeleton" style="height: 10px; width: 40%; display: block; margin-bottom: 10px;"></span>
+        <h4 class="skeleton" style="height: 22px; width: 80%; margin-bottom: 8px;"></h4>
+        <div class="card-divider" style="background: transparent;"></div>
+        <span class="skeleton" style="height: 30px; width: 50%; display: block; margin-bottom: 24px;"></span>
+        <button class="card-btn skeleton" style="height: 40px; border: none;"></button>
+      </div>
+    </div>
+    <div class="product-card skeleton-card">
+      <div class="card-img-wrap skeleton" style="height: 260px;"></div>
+      <div class="card-content">
+        <span class="skeleton" style="height: 10px; width: 35%; display: block; margin-bottom: 10px;"></span>
+        <h4 class="skeleton" style="height: 22px; width: 75%; margin-bottom: 8px;"></h4>
+        <div class="card-divider" style="background: transparent;"></div>
+        <span class="skeleton" style="height: 30px; width: 45%; display: block; margin-bottom: 24px;"></span>
+        <button class="card-btn skeleton" style="height: 40px; border: none;"></button>
+      </div>
+    </div>
+    <div class="product-card skeleton-card">
+      <div class="card-img-wrap skeleton" style="height: 260px;"></div>
+      <div class="card-content">
+        <span class="skeleton" style="height: 10px; width: 50%; display: block; margin-bottom: 10px;"></span>
+        <h4 class="skeleton" style="height: 22px; width: 90%; margin-bottom: 8px;"></h4>
+        <div class="card-divider" style="background: transparent;"></div>
+        <span class="skeleton" style="height: 30px; width: 60%; display: block; margin-bottom: 24px;"></span>
+        <button class="card-btn skeleton" style="height: 40px; border: none;"></button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- FOOTER -->
@@ -476,10 +568,12 @@ const ring   = document.getElementById('cursorRing');
 let mx=0, my=0, rx=0, ry=0;
 
 document.addEventListener('mousemove', e => {
+  if (window.innerWidth <= 900) return;
   mx = e.clientX; my = e.clientY;
   cursor.style.left = mx+'px'; cursor.style.top = my+'px';
 });
 (function animRing(){
+  if (window.innerWidth <= 900) return;
   rx += (mx-rx)*0.12; ry += (my-ry)*0.12;
   ring.style.left = rx+'px'; ring.style.top = ry+'px';
   requestAnimationFrame(animRing);
@@ -487,15 +581,52 @@ document.addEventListener('mousemove', e => {
 
 function addHover(sel){
   document.querySelectorAll(sel).forEach(el=>{
-    el.addEventListener('mouseenter',()=>{ cursor.classList.add('hovered'); ring.classList.add('hovered'); });
-    el.addEventListener('mouseleave',()=>{ cursor.classList.remove('hovered'); ring.classList.remove('hovered'); });
+    el.addEventListener('mouseenter',()=>{
+      if (window.innerWidth <= 900) return;
+      cursor.classList.add('hovered'); ring.classList.add('hovered');
+    });
+    el.addEventListener('mouseleave',()=>{
+      if (window.innerWidth <= 900) return;
+      cursor.classList.remove('hovered'); ring.classList.remove('hovered');
+    });
   });
 }
 addHover('a, button, select, input');
 
+// ── MOBILE MENU TOGGLE ──
+const menuToggle = document.getElementById('menuToggle');
+const navMenu = document.getElementById('navMenu');
+
+if (menuToggle && navMenu) {
+  menuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuToggle.classList.toggle('active');
+    navMenu.classList.toggle('active');
+  });
+
+  // Close when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    }
+  });
+}
+
 /* ── THREE.JS PARTICLES ── */
 (function(){
   const canvas = document.getElementById('bg-canvas');
+  if (window.innerWidth <= 900) {
+    return;
+  }
   const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.setSize(innerWidth, innerHeight);

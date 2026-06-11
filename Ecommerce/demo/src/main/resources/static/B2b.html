@@ -164,10 +164,69 @@ footer{padding:70px 6%;border-top:1px solid var(--glass-border);background:var(-
 .reveal-right{opacity:0;transform:translateX(40px);transition:opacity 0.9s ease,transform 0.9s ease;}
 .reveal-right.active{opacity:1;transform:translateX(0);}
 
+/* ── RESPONSIVE NAVBAR ── */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 26px;
+  height: 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+  padding: 0;
+}
+.menu-toggle span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--gold);
+  transition: all 0.3s ease;
+  transform-origin: left center;
+}
+
 @media(max-width:900px){
+  #cursor, #cursor-ring { display: none !important; }
+  body { cursor: auto; }
+  
+  .menu-toggle { display: flex; }
+  header nav {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw; height: 100vh;
+    background: var(--ink);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    z-index: 1000;
+    padding: 100px 0;
+  }
+  header nav.active { display: flex; }
+  nav a { font-size: 18px; letter-spacing: 3px; margin: 0; }
+  .menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translateY(-2px); }
+  .menu-toggle.active span:nth-child(2) { width: 0%; opacity: 0; }
+  .menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translateY(2px); }
+  
   .stats-bar{grid-template-columns:repeat(2,1fr);}
   .why-grid{grid-template-columns:1fr;}
-  nav{display:none;}
+}
+
+@media(max-width:500px){
+  .stats-bar { grid-template-columns: 1fr; }
+  .stat { border-right: none; border-bottom: 1px solid var(--glass-border); }
+  .stat:last-child { border-bottom: none; }
+  .footer-inner { flex-direction: column; text-align: center; gap: 20px; }
+  .footer-links { justify-content: center; flex-wrap: wrap; }
+  .hero h1 { font-size: 34px; }
+  .hero-sub { font-size: 14px; }
+  .industry-grid { grid-template-columns: 1fr !important; }
+  .why-card { padding: 30px 24px; }
+  .section { padding: 60px 5%; }
+  .why-section { padding: 60px 5%; }
+  .final-cta { padding: 80px 5%; }
 }
 </style>
 </head>
@@ -184,7 +243,12 @@ footer{padding:70px 6%;border-top:1px solid var(--glass-border);background:var(-
 
 <header>
   <div class="logo">K·Sleep</div>
-  <nav>
+  <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+  <nav id="navMenu">
     <a href="index.html">Home</a>
     <a href="openProduct.html">Products</a>
     <a href="B2b.html" class="active">B2B</a>
@@ -377,16 +441,47 @@ window.addEventListener('load',()=>{setTimeout(()=>document.getElementById('load
 // CURSOR
 const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
 let mx=0,my=0,rx=0,ry=0;
-document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
-(function animRing(){rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);})();
+document.addEventListener('mousemove',e=>{
+  if(window.innerWidth<=900) return;
+  mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';
+});
+(function animRing(){
+  if(window.innerWidth<=900) return;
+  rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);
+})();
+
+// MOBILE NAV MENU
+const menuToggle = document.getElementById('menuToggle');
+const navMenu = document.getElementById('navMenu');
+if (menuToggle && navMenu) {
+  menuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuToggle.classList.toggle('active');
+    navMenu.classList.toggle('active');
+  });
+  document.addEventListener('click', (e) => {
+    if (!navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      menuToggle.classList.remove('active');
+      navMenu.classList.remove('active');
+    }
+  });
+}
 
 // PARTICLES
-const pc=document.getElementById('particles');
-for(let i=0;i<22;i++){
-  const p=document.createElement('div');p.className='particle';
-  const big=Math.random()>0.7;
-  p.style.cssText=`left:${Math.random()*100}%;width:${big?2.5:1.5}px;height:${big?2.5:1.5}px;--dur:${7+Math.random()*12}s;--delay:${Math.random()*10}s;--dx:${(Math.random()-0.5)*70}px;`;
-  pc.appendChild(p);
+if (window.innerWidth > 900) {
+  const pc=document.getElementById('particles');
+  for(let i=0;i<22;i++){
+    const p=document.createElement('div');p.className='particle';
+    const big=Math.random()>0.7;
+    p.style.cssText=`left:${Math.random()*100}%;width:${big?2.5:1.5}px;height:${big?2.5:1.5}px;--dur:${7+Math.random()*12}s;--delay:${Math.random()*10}s;--dx:${(Math.random()-0.5)*70}px;`;
+    pc.appendChild(p);
+  }
 }
 
 // 3D TILT
