@@ -70,6 +70,12 @@ public class Controllers {
         return "redirect:/index.html";
     }
 
+    @GetMapping("/ping")
+    @ResponseBody
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("PONG");
+    }
+
     @PostMapping("/admin/sendOtp")
     @ResponseBody
     public ResponseEntity<String> sendAdminOtp(@RequestParam String email, HttpSession session) {

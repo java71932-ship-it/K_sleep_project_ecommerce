@@ -56,7 +56,7 @@ public class SecurityConfig {
                     "/B2b.html", "/contact.html", "/openProduct.html", "/admin.html", 
                     "/fechdata/**", "/images/**", "/signup", "/loginpage", "/adminLogin", 
                     "/starting", "/css/**", "/js/**", "/webjars/**", "/sendContactEmail",
-                    "/admin/sendOtp"
+                    "/admin/sendOtp", "/ping"
                 ).permitAll()
                 // Admin paths
                 .requestMatchers("/admin/**", "/prodectadd.html", "/prodectlist.html", "/insertproductdata").hasRole("ADMIN")

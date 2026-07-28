@@ -131,7 +131,8 @@
 
         <h2>Login Account</h2>
 
-        <form action="/loginpage" method="post">
+        <form action="/loginpage" method=" post">
+
             <input type="hidden" name="id" id="productId">
 
             <label>Email</label>
@@ -157,13 +158,13 @@
         const params = new URLSearchParams(window.location.search);
 
         const id = params.get("id");
-        if (id) {
-            document.getElementById("productId").value = id;
-            const signupLink = document.querySelector('a[href="sigeup.html"]');
-            if (signupLink) {
-                signupLink.href = "sigeup.html?id=" + id;
-            }
+
+        document.getElementById("productId").value = id;
+        const signupLink = document.querySelector('a[href="sigeup.html"]');
+        if (signupLink) {
+            signupLink.href = "sigeup.html?id=" + id;
         }
+
 
         const email = params.get("email");
         if (email) {
