@@ -29,7 +29,6 @@ body {
   color: var(--cream);
   font-family: 'DM Sans', sans-serif;
   overflow-x: hidden;
-  cursor: none;
 }
 a { text-decoration: none; color: inherit; }
 
@@ -65,15 +64,6 @@ a { text-decoration: none; color: inherit; }
   pointer-events: none;
 }
 
-body::after {
-  content: '';
-  position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  opacity: 0.03;
-  pointer-events: none;
-  z-index: 9997;
-}
-
 header {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -82,22 +72,17 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-header::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(10,10,15,0.88) 0%, transparent 100%);
-  pointer-events: none;
-  z-index: -1;
+  background: rgba(10,10,15,0.85);
   backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(201,168,76,0.08);
 }
 .logo {
   font-family: 'Cormorant Garamond', serif;
   font-size: 28px; font-weight: 600;
   letter-spacing: 4px; color: var(--gold);
-  text-transform: uppercase; position: relative; z-index: 1;
+  text-transform: uppercase;
 }
-nav { display: flex; gap: 36px; align-items: center; position: relative; z-index: 1; }
+nav { display: flex; gap: 36px; align-items: center; }
 nav a {
   font-size: 11px; font-weight: 400;
   letter-spacing: 2.5px; text-transform: uppercase;
@@ -114,14 +99,13 @@ nav a:hover, nav a.active { color: var(--gold); }
 nav a:hover::after, nav a.active::after { width: 100%; }
 
 .hero {
-  position: relative; height: 72vh;
+  position: relative; height: 65vh;
   display: flex; align-items: center; justify-content: center;
   text-align: center; overflow: hidden; z-index: 1;
 }
 .hero-img {
   position: absolute; inset: 0;
   background: url('https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=1800') center/cover no-repeat;
-  will-change: transform;
 }
 .hero-overlay {
   position: absolute; inset: 0;
@@ -130,19 +114,19 @@ nav a:hover::after, nav a.active::after { width: 100%; }
 .hero-content { position: relative; z-index: 2; padding: 0 20px; }
 .hero-eyebrow {
   font-size: 10px; letter-spacing: 6px; text-transform: uppercase;
-  color: var(--gold); margin-bottom: 24px; display: block; opacity: 0;
+  color: var(--gold); margin-bottom: 24px; display: block;
 }
 .hero h1 {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(42px, 7vw, 90px);
+  font-size: clamp(42px, 7vw, 80px);
   font-weight: 300; line-height: 1.05;
-  letter-spacing: -1px; margin-bottom: 24px; opacity: 0;
+  letter-spacing: -1px; margin-bottom: 24px;
 }
 .hero h1 em { font-style: italic; color: var(--gold-light); }
 .hero-sub {
   font-size: 15px; font-weight: 300;
   color: rgba(245,240,232,0.6);
-  max-width: 520px; margin: 0 auto; line-height: 1.8; opacity: 0;
+  max-width: 520px; margin: 0 auto; line-height: 1.8;
 }
 
 .filter-section { position: relative; z-index: 2; padding: 60px 6% 0; }
@@ -187,12 +171,11 @@ nav a:hover::after, nav a.active::after { width: 100%; }
   border: 1px solid var(--border); border-radius: 2px;
   color: var(--cream);
   font-family: 'DM Sans', sans-serif; font-size: 13px; letter-spacing: 0.5px;
-  outline: none; cursor: none; transition: border-color 0.3s;
-  min-width: 200px; appearance: none; -webkit-appearance: none;
+  outline: none; transition: border-color 0.3s;
+  min-width: 200px; appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c9a84c' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 16px center;
 }
-#sortSelect:focus { border-color: rgba(201,168,76,0.45); }
 #sortSelect option { background: var(--deep); color: var(--cream); }
 
 .results-count {
@@ -234,23 +217,15 @@ nav a:hover::after, nav a.active::after { width: 100%; }
   border-radius: 4px; overflow: hidden;
   position: relative;
   transition: border-color 0.4s;
-  will-change: transform; cursor: none;
 }
 .product-card:hover { border-color: rgba(201,168,76,0.32); }
 
 .card-img-wrap { position: relative; height: 260px; overflow: hidden; }
 .card-img-wrap img {
   width: 100%; height: 100%; object-fit: cover; display: block;
-  transition: transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94);
+  transition: transform 0.8s ease;
 }
 .product-card:hover .card-img-wrap img { transform: scale(1.07); }
-
-.card-img-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(10,10,15,0.7) 0%, transparent 55%);
-  opacity: 0; transition: opacity 0.4s;
-}
-.product-card:hover .card-img-overlay { opacity: 1; }
 
 .card-badge {
   position: absolute; top: 16px; left: 16px;
@@ -294,26 +269,9 @@ nav a:hover::after, nav a.active::after { width: 100%; }
   background: transparent; color: var(--gold);
   font-family: 'DM Sans', sans-serif;
   font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-  cursor: none; transition: color 0.4s, border-color 0.4s;
-  position: relative; overflow: hidden;
+  cursor: pointer; transition: all 0.3s;
 }
-.card-btn::before {
-  content: ''; position: absolute; inset: 0;
-  background: var(--gold);
-  transform: translateX(-101%);
-  transition: transform 0.45s cubic-bezier(0.77,0,0.175,1);
-  z-index: 0;
-}
-.card-btn span { position: relative; z-index: 1; }
-.card-btn:hover { color: var(--ink); border-color: var(--gold); }
-.card-btn:hover::before { transform: translateX(0); }
-
-.card-line {
-  position: absolute; bottom: 0; left: 0;
-  width: 0; height: 2px; background: var(--gold);
-  transition: width 0.5s ease;
-}
-.product-card:hover .card-line { width: 100%; }
+.card-btn:hover { color: var(--ink); background: var(--gold); border-color: var(--gold); }
 
 footer { position: relative; z-index: 2; background: var(--deep); padding: 80px 6% 48px; }
 .footer-top {
@@ -327,8 +285,6 @@ footer { position: relative; z-index: 2; background: var(--deep); padding: 80px 
 .footer-col a { display: block; font-size: 13px; color: var(--muted); margin-bottom: 10px; transition: color 0.3s; }
 .footer-col a:hover { color: var(--cream); }
 .footer-bottom { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(138,128,112,0.45); }
-
-.reveal { opacity: 0; transform: translateY(36px); }
 
 @media (max-width: 900px) {
   nav { display: none; }
@@ -375,7 +331,7 @@ footer { position: relative; z-index: 2; background: var(--deep); padding: 80px 
 </section>
 
 <div class="filter-section">
-  <div class="filter-wrap reveal">
+  <div class="filter-wrap">
     <span class="filter-label">Filter</span>
     <div class="search-wrap">
       <span class="search-icon">⌕</span>
@@ -447,8 +403,6 @@ function escapeHTML(str) {
     .replace(/'/g, '&#39;');
 }
 
-gsap.registerPlugin(ScrollTrigger);
-
 const cursor = document.getElementById('cursor');
 const ring   = document.getElementById('cursorRing');
 let mx=0, my=0, rx=0, ry=0;
@@ -463,84 +417,9 @@ document.addEventListener('mousemove', e => {
   requestAnimationFrame(animRing);
 })();
 
-function addHover(sel){
-  document.querySelectorAll(sel).forEach(el=>{
-    el.addEventListener('mouseenter',()=>{ cursor.classList.add('hovered'); ring.classList.add('hovered'); });
-    el.addEventListener('mouseleave',()=>{ cursor.classList.remove('hovered'); ring.classList.remove('hovered'); });
-  });
-}
-addHover('a, button, select, input');
-
-(function(){
-  const canvas = document.getElementById('bg-canvas');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  renderer.setSize(innerWidth, innerHeight);
-  renderer.setClearColor(0x000000, 0);
-
-  const scene  = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 100);
-  camera.position.z = 5;
-
-  const geo = new THREE.BufferGeometry();
-  const N = 350, pos = new Float32Array(N*3);
-  for(let i=0;i<N;i++){
-    pos[i*3]   = (Math.random()-.5)*26;
-    pos[i*3+1] = (Math.random()-.5)*26;
-    pos[i*3+2] = (Math.random()-.5)*14;
-  }
-  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
-  const mat = new THREE.PointsMaterial({ color:0xc9a84c, size:0.022, sizeAttenuation:true, transparent:true, opacity:0.4 });
-  const stars = new THREE.Points(geo, mat);
-  scene.add(stars);
-
-  let msx=0, msy=0, sy=0;
-  document.addEventListener('mousemove', e=>{ msx=(e.clientX/innerWidth-.5)*2; msy=(e.clientY/innerHeight-.5)*2; });
-  window.addEventListener('scroll', ()=>{ sy=scrollY; });
-
-  const clk = new THREE.Clock();
-  (function animate(){
-    requestAnimationFrame(animate);
-    const t = clk.getElapsedTime();
-    stars.rotation.y = t*0.018 + msx*0.07;
-    stars.rotation.x = msy*0.04;
-    stars.position.y = -sy*0.0015;
-    renderer.render(scene, camera);
-  })();
-
-  window.addEventListener('resize',()=>{
-    camera.aspect = innerWidth/innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(innerWidth, innerHeight);
-  });
-})();
-
-gsap.to('#heroImg',{
-  yPercent:28, ease:'none',
-  scrollTrigger:{ trigger:'.hero', start:'top top', end:'bottom top', scrub:true }
-});
-gsap.timeline({ delay:0.2 })
-  .to('.hero-eyebrow',{ opacity:1, y:0, duration:0.9, ease:'power3.out' })
-  .to('.hero h1',     { opacity:1, y:0, duration:1.1, ease:'power3.out' }, '-=0.5')
-  .to('.hero-sub',    { opacity:1, y:0, duration:0.9, ease:'power3.out' }, '-=0.6');
-
-gsap.utils.toArray('.reveal').forEach(el=>{
-  gsap.fromTo(el,
-    { opacity:0, y:40 },
-    { opacity:1, y:0, duration:1, ease:'power3.out',
-      scrollTrigger:{ trigger:el, start:'top 88%' } }
-  );
-});
-
-ScrollTrigger.create({
-  start:80,
-  onEnter:     ()=> gsap.to('header',{ background:'rgba(10,10,15,0.92)', duration:0.4 }),
-  onLeaveBack: ()=> gsap.to('header',{ background:'transparent',         duration:0.4 })
-});
-
 let products = [];
 
-fetch("/fechdata")
+fetch("/fechdata?t=" + Date.now())
   .then(res => res.json())
   .then(data => {
     products = data;
@@ -568,14 +447,19 @@ function renderProducts(data){
   emptyState.style.display = 'none';
 
   data.forEach((product, i) => {
-    const cat  = categories[i % categories.length];
+    const cat = categories[i % categories.length];
     const card = document.createElement('div');
     card.className = 'product-card';
+    
+    let imgSrc = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80';
+    if (product.image1 && product.image1.trim() !== '') {
+      imgSrc = product.image1;
+    }
+
     card.innerHTML = `
       <div class="card-img-wrap">
-        <img src="${product.image1}" loading="lazy" alt="${escapeHTML(product.productName)}"
-             onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600'">
-        <div class="card-img-overlay"></div>
+        <img src="${imgSrc}" loading="lazy" alt="${escapeHTML(product.productName)}"
+             onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80'">
         <span class="card-badge">${cat}</span>
       </div>
       <div class="card-content">
@@ -584,31 +468,12 @@ function renderProducts(data){
         <div class="card-divider"></div>
         <span class="price">₹${Number(product.price).toLocaleString('en-IN')} <small class="price-sub">incl. taxes</small></span>
         <button class="card-btn" onclick="checkLogin(${product.id})">
-          <span>View Details</span>
+          <span>View Details &nbsp;✦</span>
         </button>
       </div>
-      <div class="card-line"></div>
     `;
     container.appendChild(card);
-
-    card.addEventListener('mousemove', e => {
-      const r  = card.getBoundingClientRect();
-      const cx = (e.clientX - r.left) / r.width  - 0.5;
-      const cy = (e.clientY - r.top)  / r.height - 0.5;
-      gsap.to(card,{ rotateY:cx*12, rotateX:-cy*9, transformPerspective:800, z:16, duration:0.4, ease:'power2.out' });
-    });
-    card.addEventListener('mouseleave', () => {
-      gsap.to(card,{ rotateY:0, rotateX:0, z:0, duration:0.6, ease:'power2.out' });
-    });
-
-    gsap.fromTo(card,
-      { opacity:0, scale:0.9, y:30 },
-      { opacity:1, scale:1,   y:0,  duration:0.7, ease:'power3.out', delay:(i%4)*0.1,
-        scrollTrigger:{ trigger:card, start:'top 90%' } }
-    );
   });
-
-  addHover('.card-btn');
 }
 
 function checkLogin(id){

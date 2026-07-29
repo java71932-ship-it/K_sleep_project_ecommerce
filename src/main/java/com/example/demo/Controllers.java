@@ -128,13 +128,13 @@ public class Controllers {
         }
     }
 
-    @PostMapping(value = "/insertproductdata", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/insertproductdata")
     public String productDetail(
-            @RequestParam String productName,
-            @RequestParam double price,
-            @RequestParam String material,
-            @RequestParam String comfort,
-            @RequestParam String description,
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false, defaultValue = "0.0") Double price,
+            @RequestParam(required = false) String material,
+            @RequestParam(required = false) String comfort,
+            @RequestParam(required = false) String description,
             @RequestParam(value = "image1", required = false) MultipartFile file1,
             @RequestParam(value = "image2", required = false) MultipartFile file2,
             @RequestParam(value = "image3", required = false) MultipartFile file3,
@@ -144,31 +144,33 @@ public class Controllers {
             @RequestParam(value = "imageUrl2", required = false) String imageUrl2,
             @RequestParam(value = "imageUrl3", required = false) String imageUrl3,
             @RequestParam(value = "imageUrl4", required = false) String imageUrl4,
-            @RequestParam(value = "imageUrl5", required = false) String imageUrl5,
-            HttpSession session) throws IOException {
+            @RequestParam(value = "imageUrl5", required = false) String imageUrl5) {
 
-        Files.createDirectories(Paths.get(uploadDir));
+        try {
+            prodectentity pe = new prodectentity();
+            pe.setProductName(productName != null ? productName : "New Product");
+            pe.setPrice(price != null ? price : 0.0);
+            pe.setMaterial(material != null ? material : "Standard Material");
+            pe.setComfortLevel(comfort != null ? comfort : "High Comfort");
+            pe.setProductDescription(description != null ? description : "");
 
-        String img1Name = processImageInput(file1, imageUrl1);
-        String img2Name = processImageInput(file2, imageUrl2);
-        String img3Name = processImageInput(file3, imageUrl3);
-        String img4Name = processImageInput(file4, imageUrl4);
-        String img5Name = processImageInput(file5, imageUrl5);
+            String img1Name = processImageInput(file1, imageUrl1);
+            String img2Name = processImageInput(file2, imageUrl2);
+            String img3Name = processImageInput(file3, imageUrl3);
+            String img4Name = processImageInput(file4, imageUrl4);
+            String img5Name = processImageInput(file5, imageUrl5);
 
-        prodectentity pe = new prodectentity();
-        pe.setProductName(productName);
-        pe.setPrice(price);
-        pe.setMaterial(material);
-        pe.setComfortLevel(comfort);
-        pe.setProductDescription(description);
+            if (img1Name != null) pe.setImage1(img1Name);
+            if (img2Name != null) pe.setImage2(img2Name);
+            if (img3Name != null) pe.setImage3(img3Name);
+            if (img4Name != null) pe.setImage4(img4Name);
+            if (img5Name != null) pe.setImage5(img5Name);
 
-        if (img1Name != null) pe.setImage1(img1Name);
-        if (img2Name != null) pe.setImage2(img2Name);
-        if (img3Name != null) pe.setImage3(img3Name);
-        if (img4Name != null) pe.setImage4(img4Name);
-        if (img5Name != null) pe.setImage5(img5Name);
-
-        pr.save(pe);
+            pr.save(pe);
+        } catch (Exception e) {
+            System.out.println("Error saving product: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         return "redirect:/admin/products";
     }
@@ -641,11 +643,11 @@ public class Controllers {
     @PostMapping("/admin/products/update")
     public String updateProduct(
             @RequestParam Long id,
-            @RequestParam String productName,
-            @RequestParam double price,
-            @RequestParam String material,
-            @RequestParam String comfort,
-            @RequestParam String description,
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false, defaultValue = "0.0") Double price,
+            @RequestParam(required = false) String material,
+            @RequestParam(required = false) String comfort,
+            @RequestParam(required = false) String description,
             @RequestParam(value = "image1", required = false) MultipartFile file1,
             @RequestParam(value = "image2", required = false) MultipartFile file2,
             @RequestParam(value = "image3", required = false) MultipartFile file3,
@@ -655,33 +657,39 @@ public class Controllers {
             @RequestParam(value = "imageUrl2", required = false) String imageUrl2,
             @RequestParam(value = "imageUrl3", required = false) String imageUrl3,
             @RequestParam(value = "imageUrl4", required = false) String imageUrl4,
-            @RequestParam(value = "imageUrl5", required = false) String imageUrl5) throws IOException {
+            @RequestParam(value = "imageUrl5", required = false) String imageUrl5) {
 
-        prodectentity pe = pr.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
-        pe.setProductName(productName);
-        pe.setPrice(price);
-        pe.setMaterial(material);
-        pe.setComfortLevel(comfort);
-        pe.setProductDescription(description);
+        try {
+            prodectentity pe = pr.findById(id).orElse(null);
+            if (pe != null) {
+                if (productName != null) pe.setProductName(productName);
+                if (price != null) pe.setPrice(price);
+                if (material != null) pe.setMaterial(material);
+                if (comfort != null) pe.setComfortLevel(comfort);
+                if (description != null) pe.setProductDescription(description);
 
-        Files.createDirectories(Paths.get(uploadDir));
+                String img1Name = processImageInput(file1, imageUrl1);
+                if (img1Name != null) pe.setImage1(img1Name);
 
-        String img1Name = processImageInput(file1, imageUrl1);
-        if (img1Name != null) pe.setImage1(img1Name);
+                String img2Name = processImageInput(file2, imageUrl2);
+                if (img2Name != null) pe.setImage2(img2Name);
 
-        String img2Name = processImageInput(file2, imageUrl2);
-        if (img2Name != null) pe.setImage2(img2Name);
+                String img3Name = processImageInput(file3, imageUrl3);
+                if (img3Name != null) pe.setImage3(img3Name);
 
-        String img3Name = processImageInput(file3, imageUrl3);
-        if (img3Name != null) pe.setImage3(img3Name);
+                String img4Name = processImageInput(file4, imageUrl4);
+                if (img4Name != null) pe.setImage4(img4Name);
 
-        String img4Name = processImageInput(file4, imageUrl4);
-        if (img4Name != null) pe.setImage4(img4Name);
+                String img5Name = processImageInput(file5, imageUrl5);
+                if (img5Name != null) pe.setImage5(img5Name);
 
-        String img5Name = processImageInput(file5, imageUrl5);
-        if (img5Name != null) pe.setImage5(img5Name);
+                pr.save(pe);
+            }
+        } catch (Exception e) {
+            System.out.println("Error updating product: " + e.getMessage());
+            e.printStackTrace();
+        }
 
-        pr.save(pe);
         return "redirect:/admin/products";
     }
 
