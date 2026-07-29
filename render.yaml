@@ -1,3 +1,10 @@
+databases:
+  - name: ksleep-db
+    databaseName: ksleep_db
+    user: ksleep_user
+    plan: free
+    region: singapore
+
 services:
   - type: web
     name: ksleep-ecommerce
@@ -8,15 +15,29 @@ services:
     envVars:
       - key: PORT
         value: 8080
-      - key: SPRING_DATASOURCE_URL
-        sync: false
+      - key: DB_HOST
+        fromDatabase:
+          name: ksleep-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: ksleep-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: ksleep-db
+          property: database
       - key: SPRING_DATASOURCE_USERNAME
-        sync: false
+        fromDatabase:
+          name: ksleep-db
+          property: user
       - key: SPRING_DATASOURCE_PASSWORD
-        sync: false
+        fromDatabase:
+          name: ksleep-db
+          property: password
       - key: SPRING_MAIL_USERNAME
-        sync: false
+        value: rockh7189@gmail.com
       - key: SPRING_MAIL_PASSWORD
-        sync: false
+        value: ncafnqcmhoxyhjts
       - key: JWT_SECRET
         generateValue: true
