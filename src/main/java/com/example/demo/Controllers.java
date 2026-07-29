@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -76,58 +77,27 @@ public class Controllers {
         return ResponseEntity.ok("PONG");
     }
 
-    @PostMapping("/admin/sendOtp")
-    @ResponseBody
-    public ResponseEntity<String> sendAdminOtp(@RequestParam String email, HttpSession session) {
-        if (!"pkumarsaini178@gmail.com".equals(email)) {
-            return ResponseEntity.badRequest().body("Unauthorized email address!");
-        }
-
-        // Generate 6-digit OTP
-        String otp = String.format("%06d", (int)(Math.random() * 1000000));
-        session.setAttribute("adminOtp", otp);
-
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("✦ KSleep Admin Login — OTP Verification");
-            message.setText("Hello Admin,\n\n" +
-                    "Your One-Time Password (OTP) for accessing the KSleep Admin Panel is:\n\n" +
-                    "👉 " + otp + "\n\n" +
-                    "This OTP is valid for this session only. Do not share it with anyone.\n\n" +
-                    "Thank you,\nKSleep Security Team");
-            emailsender.send(message);
-            return ResponseEntity.ok("OTP sent successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Failed to send OTP: " + e.getMessage());
-        }
-    }
-
     @PostMapping("/adminLogin")
     public String adminLogin(
             @RequestParam String name,
             @RequestParam String password,
             @RequestParam String email,
-            @RequestParam String otp,
             HttpSession session,
             jakarta.servlet.http.HttpServletResponse response) {
 
-        String sessionOtp = (String) session.getAttribute("adminOtp");
+        if ("pankaj".equals(name) && "Pankaj@3287".equals(password) && ("pkumarsaini178@gmail.com".equals(email) || "admin@ksleep.com".equals(email))) {
 
-        if ("pankaj".equals(name) && "Pankaj@3287".equals(password) && "pkumarsaini178@gmail.com".equals(email) && otp != null && otp.equals(sessionOtp)) {
-            session.removeAttribute("adminOtp");
-
-            session.setAttribute("userEmail", "admin@ksleep.com");
+            session.setAttribute("userEmail", email);
             session.setAttribute("isAdmin", true);
             session.setAttribute("userRole", "ADMIN");
 
             // Generate JWT token with ADMIN role
-            String token = JwtUtil.generateToken("admin@ksleep.com", "ADMIN");
+            String token = JwtUtil.generateToken(email, "ADMIN");
 
             // Store in HttpOnly Cookie (3 days expiration)
             jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("jwt", token);
             cookie.setHttpOnly(true);
-            cookie.setSecure(false); // Can be set to true if deployed on HTTPS
+            cookie.setSecure(false);
             cookie.setPath("/");
             cookie.setMaxAge(3 * 24 * 60 * 60); // 3 days in seconds
             response.addCookie(cookie);
@@ -197,15 +167,15 @@ public class Controllers {
 
         return pr.findAll().stream().map(product -> {
 
-            if (product.getImage1() != null)
+            if (product.getImage1() != null && !product.getImage1().startsWith("data:") && !product.getImage1().startsWith("http"))
                 product.setImage1("/images/" + product.getImage1());
-            if (product.getImage2() != null)
+            if (product.getImage2() != null && !product.getImage2().startsWith("data:") && !product.getImage2().startsWith("http"))
                 product.setImage2("/images/" + product.getImage2());
-            if (product.getImage3() != null)
+            if (product.getImage3() != null && !product.getImage3().startsWith("data:") && !product.getImage3().startsWith("http"))
                 product.setImage3("/images/" + product.getImage3());
-            if (product.getImage4() != null)
+            if (product.getImage4() != null && !product.getImage4().startsWith("data:") && !product.getImage4().startsWith("http"))
                 product.setImage4("/images/" + product.getImage4());
-            if (product.getImage5() != null)
+            if (product.getImage5() != null && !product.getImage5().startsWith("data:") && !product.getImage5().startsWith("http"))
                 product.setImage5("/images/" + product.getImage5());
 
             return product;
@@ -220,11 +190,16 @@ public class Controllers {
         prodectentity product = pr.findById(id).orElse(null);
 
         if (product != null) {
-            product.setImage1("/images/" + product.getImage1());
-            product.setImage2("/images/" + product.getImage2());
-            product.setImage3("/images/" + product.getImage3());
-            product.setImage4("/images/" + product.getImage4());
-            product.setImage5("/images/" + product.getImage5());
+            if (product.getImage1() != null && !product.getImage1().startsWith("data:") && !product.getImage1().startsWith("http"))
+                product.setImage1("/images/" + product.getImage1());
+            if (product.getImage2() != null && !product.getImage2().startsWith("data:") && !product.getImage2().startsWith("http"))
+                product.setImage2("/images/" + product.getImage2());
+            if (product.getImage3() != null && !product.getImage3().startsWith("data:") && !product.getImage3().startsWith("http"))
+                product.setImage3("/images/" + product.getImage3());
+            if (product.getImage4() != null && !product.getImage4().startsWith("data:") && !product.getImage4().startsWith("http"))
+                product.setImage4("/images/" + product.getImage4());
+            if (product.getImage5() != null && !product.getImage5().startsWith("data:") && !product.getImage5().startsWith("http"))
+                product.setImage5("/images/" + product.getImage5());
         }
 
         return product;
@@ -775,9 +750,13 @@ public class Controllers {
 
     private String processImageInput(MultipartFile file, String imageUrl) throws IOException {
         if (file != null && !file.isEmpty()) {
-            String imgName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            file.transferTo(Paths.get(uploadDir + imgName));
-            return imgName;
+            String contentType = file.getContentType();
+            if (contentType == null || contentType.trim().isEmpty()) {
+                contentType = "image/jpeg";
+            }
+            byte[] bytes = file.getBytes();
+            String base64 = Base64.getEncoder().encodeToString(bytes);
+            return "data:" + contentType + ";base64," + base64;
         } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
             return saveImageFromUrl(imageUrl);
         }
@@ -789,27 +768,22 @@ public class Controllers {
             if (urlString == null || urlString.trim().isEmpty()) {
                 return null;
             }
+            if (urlString.startsWith("data:")) {
+                return urlString;
+            }
             URL url = new URL(urlString);
-            String extension = ".jpg";
-            
-            String path = url.getPath();
-            if (path.contains(".")) {
-                String ext = path.substring(path.lastIndexOf(".")).toLowerCase();
-                if (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png") || ext.equals(".gif") || ext.equals(".webp")) {
-                    extension = ext;
-                }
-            }
-            
-            String imgName = UUID.randomUUID() + extension;
-            Files.createDirectories(Paths.get(uploadDir));
-            
             try (InputStream in = url.openStream()) {
-                Files.copy(in, Paths.get(uploadDir + imgName), StandardCopyOption.REPLACE_EXISTING);
+                byte[] bytes = in.readAllBytes();
+                String base64 = Base64.getEncoder().encodeToString(bytes);
+                String contentType = "image/jpeg";
+                if (urlString.toLowerCase().endsWith(".png")) contentType = "image/png";
+                else if (urlString.toLowerCase().endsWith(".webp")) contentType = "image/webp";
+                else if (urlString.toLowerCase().endsWith(".gif")) contentType = "image/gif";
+                return "data:" + contentType + ";base64," + base64;
             }
-            return imgName;
         } catch (Exception e) {
             System.out.println("Error downloading image from URL: " + e.getMessage());
-            return null;
+            return urlString;
         }
     }
 }
