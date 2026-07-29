@@ -1,12 +1,25 @@
-# Ignore uploaded images and assets
-images/
-project.image/
-
-# Ignore IDE configuration directories
-.vscode/
-.idea/
-*.class
-
-# Ignore Maven build directories
 target/
-demo/target/
+!.mvn/wrapper/maven-wrapper.jar
+!target/classes
+
+### Optionals ###
+.DS_Store
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IDE ###
+.idea
+*.iws
+*.iml
+*.ipr
+.vscode/
+
+### Temp / Logs ###
+*.log
+*.sys
+demo/
