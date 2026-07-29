@@ -64,6 +64,26 @@ public class Controllers {
             admin.setRole("ADMIN");
             sr.save(admin);
         }
+
+        if (pr.count() == 0) {
+            prodectentity p1 = new prodectentity();
+            p1.setProductName("KSleep Luxury Memory Foam Mattress");
+            p1.setPrice(18999.00);
+            p1.setMaterial("Orthopedic Memory Foam & Organic Cotton");
+            p1.setComfortLevel("High Comfort");
+            p1.setProductDescription("Experience blissful sleep with multi-layer orthopedic support and breathable airflow design.");
+            p1.setImage1("https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80");
+            pr.save(p1);
+
+            prodectentity p2 = new prodectentity();
+            p2.setProductName("KSleep Ergonomic Hybrid Mattress");
+            p2.setPrice(14499.00);
+            p2.setMaterial("Pocket Spring & High Resilience Foam");
+            p2.setComfortLevel("Medium Comfort");
+            p2.setProductDescription("Engineered for perfect spinal alignment and zero motion transfer.");
+            p2.setImage1("https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80");
+            pr.save(p2);
+        }
     }
 
     @GetMapping("starting")
@@ -764,26 +784,9 @@ public class Controllers {
     }
 
     private String saveImageFromUrl(String urlString) {
-        try {
-            if (urlString == null || urlString.trim().isEmpty()) {
-                return null;
-            }
-            if (urlString.startsWith("data:")) {
-                return urlString;
-            }
-            URL url = new URL(urlString);
-            try (InputStream in = url.openStream()) {
-                byte[] bytes = in.readAllBytes();
-                String base64 = Base64.getEncoder().encodeToString(bytes);
-                String contentType = "image/jpeg";
-                if (urlString.toLowerCase().endsWith(".png")) contentType = "image/png";
-                else if (urlString.toLowerCase().endsWith(".webp")) contentType = "image/webp";
-                else if (urlString.toLowerCase().endsWith(".gif")) contentType = "image/gif";
-                return "data:" + contentType + ";base64," + base64;
-            }
-        } catch (Exception e) {
-            System.out.println("Error downloading image from URL: " + e.getMessage());
-            return urlString;
+        if (urlString == null || urlString.trim().isEmpty()) {
+            return null;
         }
+        return urlString.trim();
     }
 }

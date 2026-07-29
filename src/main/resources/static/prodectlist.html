@@ -235,6 +235,12 @@ let html = "";
 
 data.forEach(product => {
 
+let imgs = "";
+if (product.image1) imgs += `<img src="${product.image1}">`;
+if (product.image2) imgs += `<img src="${product.image2}">`;
+if (product.image3) imgs += `<img src="${product.image3}">`;
+if (product.image4) imgs += `<img src="${product.image4}">`;
+
 html += `
 <div class="product-card">
 
@@ -246,10 +252,7 @@ html += `
 <p>Comfort: ${escapeHTML(product.comfortLevel)}</p>
 
 <div class="image-container">
-<img src="${product.image1 || ''}">
-<img src="${product.image2 || ''}">
-<img src="${product.image3 || ''}">
-<img src="${product.image4 || ''}">
+${imgs}
 </div>
 
 <p class="desc">${escapeHTML(product.productDescription || '')}</p>
