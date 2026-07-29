@@ -170,11 +170,7 @@ public class Controllers {
 
         pr.save(pe);
 
-        String role = (String) session.getAttribute("userRole");
-        if ("ADMIN".equals(role)) {
-            return "redirect:/admin/products";
-        }
-        return "redirect:/prodectlist.html";
+        return "redirect:/admin/products";
     }
 
     // ===============================
