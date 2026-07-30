@@ -84,7 +84,6 @@
         color: #888;
         font-size: 14px;
     }
-
 </style>
 </head>
 
@@ -102,7 +101,7 @@
 
         <div class="form-group">
             <label>Price (₹)</label>
-            <input type="number" name="price" placeholder="Enter price" required>
+            <input type="number" step="0.01" name="price" placeholder="Enter price" required>
         </div>
 
         <div class="form-group">
@@ -125,13 +124,18 @@
         </div>
 
         <div class="form-group">
-            <label>Upload Product Images (Minimum 5)</label>
+            <label>Product Images (Upload File OR Paste URL)</label>
             <div class="image-grid">
-                <input type="file" name="image1" accept="image/*" required>
-                <input type="file" name="image2" accept="image/*" required>
-                <input type="file" name="image3" accept="image/*" required>
-                <input type="file" name="image4" accept="image/*" required>
-                <input type="file" name="image5" accept="image/*" required>
+                <input type="file" name="image1" accept="image/*">
+                <input type="text" name="imageUrl1" placeholder="Image 1 URL (Optional)">
+                <input type="file" name="image2" accept="image/*">
+                <input type="text" name="imageUrl2" placeholder="Image 2 URL (Optional)">
+                <input type="file" name="image3" accept="image/*">
+                <input type="text" name="imageUrl3" placeholder="Image 3 URL (Optional)">
+                <input type="file" name="image4" accept="image/*">
+                <input type="text" name="imageUrl4" placeholder="Image 4 URL (Optional)">
+                <input type="file" name="image5" accept="image/*">
+                <input type="text" name="imageUrl5" placeholder="Image 5 URL (Optional)">
             </div>
         </div>
 

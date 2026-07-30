@@ -369,7 +369,7 @@
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('addModal')">&times;</span>
             <h2 class="modal-title">Add New Product</h2>
-            <form th:action="@{/insertproductdata}" method="POST" enctype="multipart/form-data" onsubmit="return validateAddForm(this);">
+            <form action="/insertproductdata" th:action="@{/insertproductdata}" method="POST" enctype="multipart/form-data" onsubmit="return validateAddForm(this);">
                 <div class="form-group">
                     <label class="form-label">Product Name</label>
                     <input type="text" name="productName" placeholder="e.g. Memory Foam Mattress" required>
@@ -428,7 +428,7 @@
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('editModal')">&times;</span>
             <h2 class="modal-title">Edit Product</h2>
-            <form th:action="@{/admin/products/update}" method="POST" enctype="multipart/form-data">
+            <form action="/admin/products/update" th:action="@{/admin/products/update}" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id" id="edit-id">
                 <div class="form-group">
                     <label class="form-label">Product Name</label>
@@ -490,12 +490,6 @@
         }
 
         function validateAddForm(form) {
-            const fileInput1 = form.querySelector('input[name="image1"]');
-            const urlInput1 = form.querySelector('input[name="imageUrl1"]');
-            if ((!fileInput1.files || fileInput1.files.length === 0) && !urlInput1.value.trim()) {
-                alert('Please provide at least 1 image file or image URL for Image 1!');
-                return false;
-            }
             return true;
         }
 

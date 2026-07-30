@@ -2,11 +2,13 @@ package com.example.demo;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -21,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -50,11 +53,26 @@ public class Controllers {
     @Autowired
     JavaMailSender emailsender;
 
+    @Autowired(required = false)
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @Value("${project.image}")
     private String uploadDir;
 
     @PostConstruct
     public void initAdmin() {
+        if (jdbcTemplate != null) {
+            try {
+                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image1 LONGTEXT");
+                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image2 LONGTEXT");
+                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image3 LONGTEXT");
+                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image4 LONGTEXT");
+                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image5 LONGTEXT");
+            } catch (Exception e) {
+                System.out.println("Column alter check: " + e.getMessage());
+            }
+        }
+
         if (sr.findByEmail("admin@ksleep.com").isEmpty()) {
             Entitysignup admin = new Entitysignup();
             admin.setName("pankaj");
@@ -62,6 +80,26 @@ public class Controllers {
             admin.setPassword("Pankaj@3287");
             admin.setRole("ADMIN");
             sr.save(admin);
+        }
+
+        if (pr.count() == 0) {
+            prodectentity p1 = new prodectentity();
+            p1.setProductName("KSleep Luxury Memory Foam Mattress");
+            p1.setPrice(18999.00);
+            p1.setMaterial("Orthopedic Memory Foam & Organic Cotton");
+            p1.setComfortLevel("High Comfort");
+            p1.setProductDescription("Experience blissful sleep with multi-layer orthopedic support and breathable airflow design.");
+            p1.setImage1("https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80");
+            pr.save(p1);
+
+            prodectentity p2 = new prodectentity();
+            p2.setProductName("KSleep Ergonomic Hybrid Mattress");
+            p2.setPrice(14499.00);
+            p2.setMaterial("Pocket Spring & High Resilience Foam");
+            p2.setComfortLevel("Medium Comfort");
+            p2.setProductDescription("Engineered for perfect spinal alignment and zero motion transfer.");
+            p2.setImage1("https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80");
+            pr.save(p2);
         }
     }
 
@@ -76,30 +114,22 @@ public class Controllers {
         return ResponseEntity.ok("PONG");
     }
 
-    @PostMapping("/admin/sendOtp")
-    @ResponseBody
-    public ResponseEntity<String> sendAdminOtp(@RequestParam String email, HttpSession session) {
-        if (!"pkumarsaini178@gmail.com".equals(email)) {
-            return ResponseEntity.badRequest().body("Unauthorized email address!");
-        }
-
-        // Generate 6-digit OTP
-        String otp = String.format("%06d", (int)(Math.random() * 1000000));
-        session.setAttribute("adminOtp", otp);
-
+    @Scheduled(fixedRate = 600000) // Every 10 minutes self-ping
+    public void keepAliveSelfPing() {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("✦ KSleep Admin Login — OTP Verification");
-            message.setText("Hello Admin,\n\n" +
-                    "Your One-Time Password (OTP) for accessing the KSleep Admin Panel is:\n\n" +
-                    "👉 " + otp + "\n\n" +
-                    "This OTP is valid for this session only. Do not share it with anyone.\n\n" +
-                    "Thank you,\nKSleep Security Team");
-            emailsender.send(message);
-            return ResponseEntity.ok("OTP sent successfully");
+            String appUrl = System.getenv("RENDER_EXTERNAL_URL");
+            if (appUrl == null || appUrl.trim().isEmpty()) {
+                appUrl = "https://ksleep-ecommerce.onrender.com";
+            }
+            URL url = new URL(appUrl + "/ping");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            int responseCode = conn.getResponseCode();
+            System.out.println("✦ Self-Ping Keep-Alive response code: " + responseCode);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Failed to send OTP: " + e.getMessage());
+            System.out.println("Self-ping status: " + e.getMessage());
         }
     }
 
@@ -108,26 +138,24 @@ public class Controllers {
             @RequestParam String name,
             @RequestParam String password,
             @RequestParam String email,
-            @RequestParam String otp,
             HttpSession session,
             jakarta.servlet.http.HttpServletResponse response) {
 
-        String sessionOtp = (String) session.getAttribute("adminOtp");
+        boolean isValidAdmin = ("pankaj".equals(name) && "Pankaj@3287".equals(password))
+            || !sr.findByEmailAndPassword(email, password).isEmpty();
 
-        if ("pankaj".equals(name) && "Pankaj@3287".equals(password) && "pkumarsaini178@gmail.com".equals(email) && otp != null && otp.equals(sessionOtp)) {
-            session.removeAttribute("adminOtp");
-
-            session.setAttribute("userEmail", "admin@ksleep.com");
+        if (isValidAdmin) {
+            session.setAttribute("userEmail", email);
             session.setAttribute("isAdmin", true);
             session.setAttribute("userRole", "ADMIN");
 
             // Generate JWT token with ADMIN role
-            String token = JwtUtil.generateToken("admin@ksleep.com", "ADMIN");
+            String token = JwtUtil.generateToken(email, "ADMIN");
 
             // Store in HttpOnly Cookie (3 days expiration)
             jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("jwt", token);
             cookie.setHttpOnly(true);
-            cookie.setSecure(false); // Can be set to true if deployed on HTTPS
+            cookie.setSecure(false);
             cookie.setPath("/");
             cookie.setMaxAge(3 * 24 * 60 * 60); // 3 days in seconds
             response.addCookie(cookie);
@@ -138,15 +166,13 @@ public class Controllers {
         }
     }
 
-    // value = "/CompanyDeatailes",
-    // consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    @PostMapping(value = "/insertproductdata", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/insertproductdata")
     public String productDetail(
-            @RequestParam String productName,
-            @RequestParam double price,
-            @RequestParam String material,
-            @RequestParam String comfort,
-            @RequestParam String description,
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false, defaultValue = "0.0") Double price,
+            @RequestParam(required = false) String material,
+            @RequestParam(required = false) String comfort,
+            @RequestParam(required = false) String description,
             @RequestParam(value = "image1", required = false) MultipartFile file1,
             @RequestParam(value = "image2", required = false) MultipartFile file2,
             @RequestParam(value = "image3", required = false) MultipartFile file3,
@@ -156,37 +182,36 @@ public class Controllers {
             @RequestParam(value = "imageUrl2", required = false) String imageUrl2,
             @RequestParam(value = "imageUrl3", required = false) String imageUrl3,
             @RequestParam(value = "imageUrl4", required = false) String imageUrl4,
-            @RequestParam(value = "imageUrl5", required = false) String imageUrl5,
-            HttpSession session) throws IOException {
+            @RequestParam(value = "imageUrl5", required = false) String imageUrl5) {
 
-        Files.createDirectories(Paths.get(uploadDir));
+        try {
+            prodectentity pe = new prodectentity();
+            pe.setProductName(productName != null && !productName.trim().isEmpty() ? productName : "New Product");
+            pe.setPrice(price != null ? price : 0.0);
+            pe.setMaterial(material != null && !material.trim().isEmpty() ? material : "Standard Material");
+            pe.setComfortLevel(comfort != null && !comfort.trim().isEmpty() ? comfort : "High Comfort");
+            pe.setProductDescription(description != null ? description : "");
 
-        String img1Name = processImageInput(file1, imageUrl1);
-        String img2Name = processImageInput(file2, imageUrl2);
-        String img3Name = processImageInput(file3, imageUrl3);
-        String img4Name = processImageInput(file4, imageUrl4);
-        String img5Name = processImageInput(file5, imageUrl5);
+            String img1Name = processImageInput(file1, imageUrl1);
+            String img2Name = processImageInput(file2, imageUrl2);
+            String img3Name = processImageInput(file3, imageUrl3);
+            String img4Name = processImageInput(file4, imageUrl4);
+            String img5Name = processImageInput(file5, imageUrl5);
 
-        prodectentity pe = new prodectentity();
-        pe.setProductName(productName);
-        pe.setPrice(price);
-        pe.setMaterial(material);
-        pe.setComfortLevel(comfort);
-        pe.setProductDescription(description);
+            if (img1Name != null) pe.setImage1(img1Name);
+            if (img2Name != null) pe.setImage2(img2Name);
+            if (img3Name != null) pe.setImage3(img3Name);
+            if (img4Name != null) pe.setImage4(img4Name);
+            if (img5Name != null) pe.setImage5(img5Name);
 
-        if (img1Name != null) pe.setImage1(img1Name);
-        if (img2Name != null) pe.setImage2(img2Name);
-        if (img3Name != null) pe.setImage3(img3Name);
-        if (img4Name != null) pe.setImage4(img4Name);
-        if (img5Name != null) pe.setImage5(img5Name);
-
-        pr.save(pe);
-
-        String role = (String) session.getAttribute("userRole");
-        if ("ADMIN".equals(role)) {
-            return "redirect:/admin/products";
+            prodectentity saved = pr.save(pe);
+            System.out.println("✦ Successfully saved product ID: " + saved.getId() + " - Name: " + saved.getProductName());
+        } catch (Exception e) {
+            System.out.println("❌ Error saving product: " + e.getMessage());
+            e.printStackTrace();
         }
-        return "redirect:/prodectlist.html";
+
+        return "redirect:/admin/products";
     }
 
     // ===============================
@@ -199,15 +224,15 @@ public class Controllers {
 
         return pr.findAll().stream().map(product -> {
 
-            if (product.getImage1() != null)
+            if (product.getImage1() != null && !product.getImage1().startsWith("data:") && !product.getImage1().startsWith("http"))
                 product.setImage1("/images/" + product.getImage1());
-            if (product.getImage2() != null)
+            if (product.getImage2() != null && !product.getImage2().startsWith("data:") && !product.getImage2().startsWith("http"))
                 product.setImage2("/images/" + product.getImage2());
-            if (product.getImage3() != null)
+            if (product.getImage3() != null && !product.getImage3().startsWith("data:") && !product.getImage3().startsWith("http"))
                 product.setImage3("/images/" + product.getImage3());
-            if (product.getImage4() != null)
+            if (product.getImage4() != null && !product.getImage4().startsWith("data:") && !product.getImage4().startsWith("http"))
                 product.setImage4("/images/" + product.getImage4());
-            if (product.getImage5() != null)
+            if (product.getImage5() != null && !product.getImage5().startsWith("data:") && !product.getImage5().startsWith("http"))
                 product.setImage5("/images/" + product.getImage5());
 
             return product;
@@ -222,11 +247,16 @@ public class Controllers {
         prodectentity product = pr.findById(id).orElse(null);
 
         if (product != null) {
-            product.setImage1("/images/" + product.getImage1());
-            product.setImage2("/images/" + product.getImage2());
-            product.setImage3("/images/" + product.getImage3());
-            product.setImage4("/images/" + product.getImage4());
-            product.setImage5("/images/" + product.getImage5());
+            if (product.getImage1() != null && !product.getImage1().startsWith("data:") && !product.getImage1().startsWith("http"))
+                product.setImage1("/images/" + product.getImage1());
+            if (product.getImage2() != null && !product.getImage2().startsWith("data:") && !product.getImage2().startsWith("http"))
+                product.setImage2("/images/" + product.getImage2());
+            if (product.getImage3() != null && !product.getImage3().startsWith("data:") && !product.getImage3().startsWith("http"))
+                product.setImage3("/images/" + product.getImage3());
+            if (product.getImage4() != null && !product.getImage4().startsWith("data:") && !product.getImage4().startsWith("http"))
+                product.setImage4("/images/" + product.getImage4());
+            if (product.getImage5() != null && !product.getImage5().startsWith("data:") && !product.getImage5().startsWith("http"))
+                product.setImage5("/images/" + product.getImage5());
         }
 
         return product;
@@ -407,23 +437,22 @@ public class Controllers {
             @RequestParam int qty,
             HttpSession session) {
 
-        // ✅ KEY LINE — read email from session (set during login)
         String sessionEmail = (String) session.getAttribute("userEmail");
         String finalEmail = sessionEmail != null ? sessionEmail : email;
 
         orderEntity order = new orderEntity();
         order.setCustomerName(username);
-        order.setEmail(finalEmail); // ✅ session email links to My Orders
+        order.setEmail(finalEmail);
         order.setMobile_No(mobile);
         order.setAddress(address + ", " + city + ", " + state + " - " + pincode);
         order.setProductName(pName);
         order.setPrice(pprice);
-        order.setImage(image); // ✅ saves image URL/filename
+        order.setImage(image);
         order.setProductId(product_id);
-        order.setQuantity(qty); // ✅ fixed field name
-        order.setStatus("confirmed"); // ✅ default status
+        order.setQuantity(qty);
+        order.setStatus("confirmed");
 
-        or.save(order); // ✅ save to DB
+        or.save(order);
 
         // Save delivery profile if not already present
         try {
@@ -441,7 +470,6 @@ public class Controllers {
             System.out.println("Error saving customer profile: " + ex.getMessage());
         }
 
-        // ✅ send confirmation email AFTER save
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(email);
@@ -453,8 +481,7 @@ public class Controllers {
                             "Price    : ₹" + pprice + "\n" +
                             "Quantity : " + qty + "\n" +
                             "Address  : " + address + ", " + city + ", " + state + " - " + pincode + "\n\n" +
-                            "Thank you for choosing KSleep ✦\n" +
-                            "Track your order at: yourdomain.com/myorder.html");
+                            "Thank you for choosing KSleep ✦\n");
             emailsender.send(message);
 
             // Send notification to admin
@@ -471,28 +498,26 @@ public class Controllers {
                             "Price           : ₹" + pprice + "\n" +
                             "Quantity        : " + qty + "\n" +
                             "Delivery Address: " + address + ", " + city + ", " + state + " - " + pincode + "\n\n" +
-                            "Manage all orders at: http://localhost:1234/admin/orders"
+                            "Manage all orders at your Admin Dashboard."
             );
             emailsender.send(adminMessage);
         } catch (Exception e) {
             System.out.println("Email error: " + e.getMessage());
         }
 
-        return "redirect:/order.html"; // ✅ go to My Orders page
+        return "redirect:/order.html";
     }
 
     @GetMapping("/orderDeatail")
     @ResponseBody
     public List<orderEntity> orderDetail(HttpSession session) {
 
-        // ✅ reads email that was set during login
         String email = (String) session.getAttribute("userEmail");
 
         if (email == null) {
-            return List.of(); // not logged in — return empty
+            return List.of();
         }
 
-        // ✅ returns ONLY this user's orders
         return or.findByEmail(email);
     }
 
@@ -508,8 +533,6 @@ public class Controllers {
             return "Order not found";
         }
 
-        /* order details */
-
         String name = order.getCustomerName();
         String email = order.getEmail();
         String productname = order.getProductName();
@@ -518,8 +541,6 @@ public class Controllers {
         double price = order.getPrice();
         String mobileno = order.getMobile_No();
         String date = order.getOrderDate().toString();
-
-        /* mail content */
 
         String detail = "Hello " + name + ",\n\n" +
                 "Your order has been cancelled successfully.\n\n" +
@@ -536,11 +557,7 @@ public class Controllers {
                 "Order Date : " + date + "\n\n" +
 
                 "Cancellation Reason : " + reason + "\n" +
-                "Additional Comment : " + comment + "\n\n" +
-
-                "";
-
-        /* send mail */
+                "Additional Comment : " + comment + "\n\n";
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
@@ -548,8 +565,6 @@ public class Controllers {
         message.setText(detail);
 
         emailsender.send(message);
-
-        /* delete order */
 
         or.deleteById(id);
 
@@ -573,7 +588,6 @@ public class Controllers {
         ms.setText(contectDeatails);
         emailsender.send(ms);
 
-        // redirect:/myorder.html"
         return "redirect:/index.html";
     }
 
@@ -622,7 +636,6 @@ public class Controllers {
         List<Entitysignup> customers = sr.findByRole("CUSTOMER");
         List<userEntity> profiles = ur.findAll();
         
-        // Map email to userEntity profile (for reliable, case-insensitive matching in Thymeleaf)
         Map<String, userEntity> profileMap = new HashMap<>();
         for (userEntity profile : profiles) {
             if (profile.getEmail() != null) {
@@ -669,11 +682,11 @@ public class Controllers {
     @PostMapping("/admin/products/update")
     public String updateProduct(
             @RequestParam Long id,
-            @RequestParam String productName,
-            @RequestParam double price,
-            @RequestParam String material,
-            @RequestParam String comfort,
-            @RequestParam String description,
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false, defaultValue = "0.0") Double price,
+            @RequestParam(required = false) String material,
+            @RequestParam(required = false) String comfort,
+            @RequestParam(required = false) String description,
             @RequestParam(value = "image1", required = false) MultipartFile file1,
             @RequestParam(value = "image2", required = false) MultipartFile file2,
             @RequestParam(value = "image3", required = false) MultipartFile file3,
@@ -683,33 +696,39 @@ public class Controllers {
             @RequestParam(value = "imageUrl2", required = false) String imageUrl2,
             @RequestParam(value = "imageUrl3", required = false) String imageUrl3,
             @RequestParam(value = "imageUrl4", required = false) String imageUrl4,
-            @RequestParam(value = "imageUrl5", required = false) String imageUrl5) throws IOException {
+            @RequestParam(value = "imageUrl5", required = false) String imageUrl5) {
 
-        prodectentity pe = pr.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
-        pe.setProductName(productName);
-        pe.setPrice(price);
-        pe.setMaterial(material);
-        pe.setComfortLevel(comfort);
-        pe.setProductDescription(description);
+        try {
+            prodectentity pe = pr.findById(id).orElse(null);
+            if (pe != null) {
+                if (productName != null) pe.setProductName(productName);
+                if (price != null) pe.setPrice(price);
+                if (material != null) pe.setMaterial(material);
+                if (comfort != null) pe.setComfortLevel(comfort);
+                if (description != null) pe.setProductDescription(description);
 
-        Files.createDirectories(Paths.get(uploadDir));
+                String img1Name = processImageInput(file1, imageUrl1);
+                if (img1Name != null) pe.setImage1(img1Name);
 
-        String img1Name = processImageInput(file1, imageUrl1);
-        if (img1Name != null) pe.setImage1(img1Name);
+                String img2Name = processImageInput(file2, imageUrl2);
+                if (img2Name != null) pe.setImage2(img2Name);
 
-        String img2Name = processImageInput(file2, imageUrl2);
-        if (img2Name != null) pe.setImage2(img2Name);
+                String img3Name = processImageInput(file3, imageUrl3);
+                if (img3Name != null) pe.setImage3(img3Name);
 
-        String img3Name = processImageInput(file3, imageUrl3);
-        if (img3Name != null) pe.setImage3(img3Name);
+                String img4Name = processImageInput(file4, imageUrl4);
+                if (img4Name != null) pe.setImage4(img4Name);
 
-        String img4Name = processImageInput(file4, imageUrl4);
-        if (img4Name != null) pe.setImage4(img4Name);
+                String img5Name = processImageInput(file5, imageUrl5);
+                if (img5Name != null) pe.setImage5(img5Name);
 
-        String img5Name = processImageInput(file5, imageUrl5);
-        if (img5Name != null) pe.setImage5(img5Name);
+                pr.save(pe);
+            }
+        } catch (Exception e) {
+            System.out.println("Error updating product: " + e.getMessage());
+            e.printStackTrace();
+        }
 
-        pr.save(pe);
         return "redirect:/admin/products";
     }
 
@@ -745,11 +764,9 @@ public class Controllers {
         data.put("totalOrders", totalOrders);
         data.put("totalRevenue", totalRevenue);
         
-        // Group by product name for quantities
         Map<String, Integer> productQuantities = or.findAll().stream()
                 .collect(Collectors.groupingBy(orderEntity::getProductName, Collectors.summingInt(orderEntity::getQuantity)));
 
-        // Sort to get top 5 products (most purchased)
         List<Map<String, Object>> topProducts = productQuantities.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .limit(5)
@@ -761,7 +778,6 @@ public class Controllers {
                 }).toList();
         data.put("mostPurchasedProducts", topProducts);
 
-        // Sort to get bottom 5 products (least purchased)
         List<Map<String, Object>> leastProducts = productQuantities.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue())
                 .limit(5)
@@ -797,9 +813,13 @@ public class Controllers {
 
     private String processImageInput(MultipartFile file, String imageUrl) throws IOException {
         if (file != null && !file.isEmpty()) {
-            String imgName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            file.transferTo(Paths.get(uploadDir + imgName));
-            return imgName;
+            String contentType = file.getContentType();
+            if (contentType == null || contentType.trim().isEmpty()) {
+                contentType = "image/jpeg";
+            }
+            byte[] bytes = file.getBytes();
+            String base64 = Base64.getEncoder().encodeToString(bytes);
+            return "data:" + contentType + ";base64," + base64;
         } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
             return saveImageFromUrl(imageUrl);
         }
@@ -807,31 +827,9 @@ public class Controllers {
     }
 
     private String saveImageFromUrl(String urlString) {
-        try {
-            if (urlString == null || urlString.trim().isEmpty()) {
-                return null;
-            }
-            URL url = new URL(urlString);
-            String extension = ".jpg";
-            
-            String path = url.getPath();
-            if (path.contains(".")) {
-                String ext = path.substring(path.lastIndexOf(".")).toLowerCase();
-                if (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png") || ext.equals(".gif") || ext.equals(".webp")) {
-                    extension = ext;
-                }
-            }
-            
-            String imgName = UUID.randomUUID() + extension;
-            Files.createDirectories(Paths.get(uploadDir));
-            
-            try (InputStream in = url.openStream()) {
-                Files.copy(in, Paths.get(uploadDir + imgName), StandardCopyOption.REPLACE_EXISTING);
-            }
-            return imgName;
-        } catch (Exception e) {
-            System.out.println("Error downloading image from URL: " + e.getMessage());
+        if (urlString == null || urlString.trim().isEmpty()) {
             return null;
         }
+        return urlString.trim();
     }
 }

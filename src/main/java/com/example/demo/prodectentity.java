@@ -25,18 +25,23 @@ public class prodectentity {
     @Column(name = "product_description", columnDefinition = "TEXT")
     private String productDescription;
 
+    @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String image1;
 
+    @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String image2;
 
+    @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String image3;
 
+    @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String image4;
 
+    @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String image5;
 }

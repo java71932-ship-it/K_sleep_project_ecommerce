@@ -2,6 +2,7 @@ package com.example.demo;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -22,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,11 +53,26 @@ public class Controllers {
     @Autowired
     JavaMailSender emailsender;
 
+    @Autowired(required = false)
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @Value("${project.image}")
     private String uploadDir;
 
     @PostConstruct
     public void initAdmin() {
+        if (jdbcTemplate != null) {
+            try {
+                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image1 LONGTEXT");
+                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image2 LONGTEXT");
+                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image3 LONGTEXT");
+                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image4 LONGTEXT");
+                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image5 LONGTEXT");
+            } catch (Exception e) {
+                System.out.println("Column alter check: " + e.getMessage());
+            }
+        }
+
         if (sr.findByEmail("admin@ksleep.com").isEmpty()) {
             Entitysignup admin = new Entitysignup();
             admin.setName("pankaj");
@@ -97,6 +114,25 @@ public class Controllers {
         return ResponseEntity.ok("PONG");
     }
 
+    @Scheduled(fixedRate = 600000) // Every 10 minutes self-ping
+    public void keepAliveSelfPing() {
+        try {
+            String appUrl = System.getenv("RENDER_EXTERNAL_URL");
+            if (appUrl == null || appUrl.trim().isEmpty()) {
+                appUrl = "https://ksleep-ecommerce.onrender.com";
+            }
+            URL url = new URL(appUrl + "/ping");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            int responseCode = conn.getResponseCode();
+            System.out.println("✦ Self-Ping Keep-Alive response code: " + responseCode);
+        } catch (Exception e) {
+            System.out.println("Self-ping status: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/adminLogin")
     public String adminLogin(
             @RequestParam String name,
@@ -105,8 +141,10 @@ public class Controllers {
             HttpSession session,
             jakarta.servlet.http.HttpServletResponse response) {
 
-        if ("pankaj".equals(name) && "Pankaj@3287".equals(password) && ("pkumarsaini178@gmail.com".equals(email) || "admin@ksleep.com".equals(email))) {
+        boolean isValidAdmin = ("pankaj".equals(name) && "Pankaj@3287".equals(password))
+            || !sr.findByEmailAndPassword(email, password).isEmpty();
 
+        if (isValidAdmin) {
             session.setAttribute("userEmail", email);
             session.setAttribute("isAdmin", true);
             session.setAttribute("userRole", "ADMIN");
@@ -148,10 +186,10 @@ public class Controllers {
 
         try {
             prodectentity pe = new prodectentity();
-            pe.setProductName(productName != null ? productName : "New Product");
+            pe.setProductName(productName != null && !productName.trim().isEmpty() ? productName : "New Product");
             pe.setPrice(price != null ? price : 0.0);
-            pe.setMaterial(material != null ? material : "Standard Material");
-            pe.setComfortLevel(comfort != null ? comfort : "High Comfort");
+            pe.setMaterial(material != null && !material.trim().isEmpty() ? material : "Standard Material");
+            pe.setComfortLevel(comfort != null && !comfort.trim().isEmpty() ? comfort : "High Comfort");
             pe.setProductDescription(description != null ? description : "");
 
             String img1Name = processImageInput(file1, imageUrl1);
@@ -166,9 +204,10 @@ public class Controllers {
             if (img4Name != null) pe.setImage4(img4Name);
             if (img5Name != null) pe.setImage5(img5Name);
 
-            pr.save(pe);
+            prodectentity saved = pr.save(pe);
+            System.out.println("✦ Successfully saved product ID: " + saved.getId() + " - Name: " + saved.getProductName());
         } catch (Exception e) {
-            System.out.println("Error saving product: " + e.getMessage());
+            System.out.println("❌ Error saving product: " + e.getMessage());
             e.printStackTrace();
         }
 

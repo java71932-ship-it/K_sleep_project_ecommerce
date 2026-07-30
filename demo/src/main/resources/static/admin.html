@@ -19,11 +19,9 @@ body{
   overflow:hidden;position:relative;
 }
 
-/* CURSOR */
 #cursor{position:fixed;width:14px;height:14px;border-radius:50%;background:var(--gold);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width 0.2s,height 0.2s;mix-blend-mode:difference;}
 #cursor-ring{position:fixed;width:40px;height:40px;border-radius:50%;border:1px solid rgba(201,168,76,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all 0.12s ease;}
 
-/* LOADER */
 #loader{position:fixed;inset:0;z-index:99999;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.8s,visibility 0.8s;}
 #loader.done{opacity:0;visibility:hidden;}
 .loader-logo{font-family:'Cormorant Garamond',serif;font-size:40px;color:var(--gold);letter-spacing:6px;margin-bottom:40px;animation:pulse 1.5s ease-in-out infinite;}
@@ -32,19 +30,16 @@ body{
 @keyframes loadFill{from{width:0;}to{width:100%;}}
 @keyframes pulse{0%,100%{opacity:0.5;}50%{opacity:1;}}
 
-/* PARTICLES */
 .particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
 .particle{position:absolute;border-radius:50%;background:var(--gold);opacity:0;animation:floatP var(--dur,8s) var(--delay,0s) infinite ease-in-out;}
 @keyframes floatP{0%{opacity:0;transform:translateY(100vh) translateX(0);}10%{opacity:0.35;}90%{opacity:0.08;}100%{opacity:0;transform:translateY(-10vh) translateX(var(--dx,20px));}}
 
-/* BG GLOW */
 .bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;}
 .glow-orb{position:absolute;border-radius:50%;filter:blur(80px);animation:orbFloat 12s ease-in-out infinite alternate;}
 .glow-orb.a{width:400px;height:400px;background:rgba(201,168,76,0.06);top:-100px;right:-100px;}
 .glow-orb.b{width:300px;height:300px;background:rgba(201,168,76,0.04);bottom:-80px;left:-80px;animation-delay:-6s;}
 @keyframes orbFloat{from{transform:translate(0,0);}to{transform:translate(30px,30px);}}
 
-/* CARD */
 .card{
   position:relative;z-index:2;
   width:100%;max-width:460px;
@@ -57,7 +52,6 @@ body{
 }
 @keyframes cardIn{from{opacity:0;transform:translateY(50px) rotateX(6deg);}to{opacity:1;transform:translateY(0) rotateX(0);}}
 
-/* CORNER ACCENTS */
 .card::before,.card::after{
   content:'';position:absolute;width:24px;height:24px;
   border-color:var(--gold);border-style:solid;opacity:0.5;
@@ -65,7 +59,6 @@ body{
 .card::before{top:-1px;left:-1px;border-width:1px 0 0 1px;}
 .card::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0;}
 
-/* HEADER */
 .card-header{text-align:center;margin-bottom:44px;}
 .admin-icon{
   width:64px;height:64px;border-radius:50%;
@@ -80,7 +73,6 @@ body{
 .card-title em{font-style:italic;color:var(--gold);}
 .card-divider{width:40px;height:1px;background:var(--gold);margin:16px auto 0;opacity:0.4;}
 
-/* FORM */
 .form-group{margin-bottom:24px;position:relative;}
 .form-label{
   display:block;font-size:10px;letter-spacing:3px;text-transform:uppercase;
@@ -96,7 +88,7 @@ body{
 }
 .form-group:focus-within .input-icon{color:var(--gold);}
 
-input[type=text],input[type=email],input[type=tel],input[type=password]{
+input[type=text],input[type=email],input[type=password]{
   width:100%;padding:14px 16px 14px 44px;
   background:rgba(255,255,255,0.03);
   border:1px solid rgba(201,168,76,0.15);
@@ -110,14 +102,12 @@ input:focus{
   box-shadow:0 0 0 3px rgba(201,168,76,0.08);
 }
 
-/* FOCUS LINE */
 .focus-line{
   position:absolute;bottom:0;left:0;width:0;height:1px;
   background:var(--gold);transition:width 0.4s ease;
 }
 .form-group:focus-within .focus-line{width:100%;}
 
-/* SUBMIT BTN */
 .btn-submit{
   width:100%;padding:16px;margin-top:8px;
   background:var(--gold);color:var(--ink);
@@ -135,10 +125,6 @@ input:focus{
 .btn-submit:hover{background:var(--gold2);transform:translateY(-2px);}
 .btn-submit:active{transform:translateY(0) scale(0.99);}
 
-/* SUCCESS STATE */
-.btn-submit.success{background:#1e7e4a;color:#fff;clip-path:none;border-radius:2px;}
-
-/* FOOTER */
 .card-footer{
   text-align:center;margin-top:28px;
   font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
@@ -146,7 +132,6 @@ input:focus{
 }
 .card-footer span{color:var(--gold);}
 
-/* TOAST */
 #toast{
   position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(80px);
   background:var(--card);border:1px solid var(--glass-border);
@@ -156,7 +141,6 @@ input:focus{
 }
 #toast.show{transform:translateX(-50%) translateY(0);}
 
-/* REVEAL */
 .form-group{opacity:0;transform:translateY(16px);animation:fgIn 0.6s ease forwards;}
 .form-group:nth-child(1){animation-delay:0.5s;}
 .form-group:nth-child(2){animation-delay:0.65s;}
@@ -182,7 +166,7 @@ input:focus{
 
 <div class="particles" id="particles"></div>
 
-<div id="toast">✦ &nbsp;<span id="toastMsg">Admin created successfully</span></div>
+<div id="toast">✦ &nbsp;<span id="toastMsg">Admin login</span></div>
 
 <div class="card" id="card"
   onmousemove="tiltCard(event,this)"
@@ -201,7 +185,7 @@ input:focus{
       <label class="form-label">Username</label>
       <div class="input-wrap">
         <span class="input-icon">◈</span>
-        <input type="text" name="name" placeholder="Enter your username" required>
+        <input type="text" name="name" placeholder="Enter username (pankaj)" required>
         <div class="focus-line"></div>
       </div>
     </div>
@@ -210,25 +194,16 @@ input:focus{
       <label class="form-label">Password</label>
       <div class="input-wrap">
         <span class="input-icon">◎</span>
-        <input type="password" name="password" placeholder="Enter your password" required>
+        <input type="password" name="password" placeholder="Enter password (Pankaj@3287)" required>
         <div class="focus-line"></div>
       </div>
     </div>
 
     <div class="form-group">
       <label class="form-label">Email Address</label>
-      <div class="input-wrap" style="display: flex; gap: 10px; position: relative;">
-        <span class="input-icon" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%);">◉</span>
-        <input type="email" name="email" id="adminEmail" placeholder="Enter email address" required style="flex: 1; padding: 14px 16px 14px 44px;">
-        <button type="button" id="sendOtpBtn" onclick="sendOTP()" style="width: auto; background: var(--gold); color: var(--ink); border: none; padding: 14px 20px; font-size: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; transition: all 0.3s; clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);">Send OTP</button>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">OTP Verification</label>
       <div class="input-wrap">
-        <span class="input-icon">⬢</span>
-        <input type="text" name="otp" id="otpField" placeholder="Enter 6-digit OTP" maxlength="6" required>
+        <span class="input-icon">◉</span>
+        <input type="email" name="email" id="adminEmail" placeholder="Enter admin email address" required>
         <div class="focus-line"></div>
       </div>
     </div>
@@ -248,16 +223,13 @@ input:focus{
 </div>
 
 <script>
-// LOADER
 window.addEventListener('load',()=>{setTimeout(()=>document.getElementById('loader').classList.add('done'),1800);});
 
-// CURSOR
 const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
 let mx=0,my=0,rx=0,ry=0;
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
 (function animRing(){rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);})();
 
-// PARTICLES
 const pc=document.getElementById('particles');
 for(let i=0;i<22;i++){
   const p=document.createElement('div');p.className='particle';
@@ -266,7 +238,6 @@ for(let i=0;i<22;i++){
   pc.appendChild(p);
 }
 
-// 3D TILT ON CARD
 function tiltCard(e,el){
   const r=el.getBoundingClientRect();
   const x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
@@ -276,73 +247,20 @@ function resetCard(el){
   el.style.transform='perspective(1000px) rotateX(0) rotateY(0)';
 }
 
-// SEND OTP
-function sendOTP() {
-  const email = document.getElementById('adminEmail').value;
-  if (!email) {
-    showToast('Please enter your email first!');
-    return;
-  }
-  if (email !== 'pkumarsaini178@gmail.com') {
-    showToast('Unauthorized email address!');
-    return;
-  }
-
-  const btn = document.getElementById('sendOtpBtn');
-  btn.textContent = 'Sending...';
-  btn.disabled = true;
-
-  fetch('/admin/sendOtp?email=' + encodeURIComponent(email), {
-    method: 'POST'
-  })
-  .then(res => {
-    if (res.ok) {
-      showToast('OTP sent successfully!');
-      btn.textContent = 'Sent';
-      let count = 60;
-      const interval = setInterval(() => {
-        count--;
-        if (count <= 0) {
-          clearInterval(interval);
-          btn.textContent = 'Send OTP';
-          btn.disabled = false;
-        } else {
-          btn.textContent = `Resend (${count}s)`;
-        }
-      }, 1000);
-    } else {
-      res.text().then(text => {
-        showToast(text || 'Failed to send OTP');
-        btn.textContent = 'Send OTP';
-        btn.disabled = false;
-      });
-    }
-  })
-  .catch(err => {
-    console.error(err);
-    showToast('Network error while sending OTP');
-    btn.textContent = 'Send OTP';
-    btn.disabled = false;
-  });
-}
-
-// SUBMIT
 function handleSubmit(e){
   const btn=document.getElementById('submitBtn');
   btn.textContent='✦  Authenticating...';
   btn.style.opacity='0.7';
   btn.disabled=true;
-  setTimeout(()=>e.target.submit(), 500);
+  setTimeout(()=>e.target.submit(), 300);
   e.preventDefault();
 }
 
-// CHECK URL ERROR
 const params = new URLSearchParams(window.location.search);
 if (params.get("error") === "invalid") {
   showToast("Invalid Admin credentials!");
 }
 
-// TOAST
 let tt;
 function showToast(msg){
   document.getElementById('toastMsg').textContent=msg;
@@ -351,7 +269,6 @@ function showToast(msg){
   clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-// INPUT FOCUS CURSOR EXPAND
 document.querySelectorAll('input').forEach(inp=>{
   inp.addEventListener('focus',()=>{cur.style.width='50px';cur.style.height='50px';});
   inp.addEventListener('blur',()=>{cur.style.width='14px';cur.style.height='14px';});

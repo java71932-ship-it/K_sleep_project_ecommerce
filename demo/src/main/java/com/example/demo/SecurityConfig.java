@@ -7,8 +7,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.filter.OncePerRequestFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +36,10 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfTokenRepository)
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                .ignoringRequestMatchers("/signup", "/loginpage", "/adminLogin", "/sendContactEmail", "/admin/sendOtp")
+                .ignoringRequestMatchers(
+                    "/signup", "/loginpage", "/adminLogin", "/sendContactEmail", "/admin/sendOtp",
+                    "/insertproductdata", "/admin/products/update", "/admin/products/delete/**", "/admin/orders/update-status"
+                )
             )
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp
@@ -44,22 +47,23 @@ public class SecurityConfig {
                         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; " +
                         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
                         "font-src 'self' https://fonts.gstatic.com; " +
-                        "img-src 'self' data: https://images.unsplash.com https://api.qrserver.com http://localhost:1234; " +
-                        "connect-src 'self' http://localhost:1234;")
+                        "img-src 'self' data: https:; " +
+                        "connect-src 'self';")
                 )
             )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
-                // Public paths
+                // Public & Action paths
                 .requestMatchers(
                     "/", "/index.html", "/login.html", "/sigeup.html", "/about.html", 
                     "/B2b.html", "/contact.html", "/openProduct.html", "/admin.html", 
                     "/fechdata/**", "/images/**", "/signup", "/loginpage", "/adminLogin", 
                     "/starting", "/css/**", "/js/**", "/webjars/**", "/sendContactEmail",
-                    "/admin/sendOtp", "/ping"
+                    "/admin/sendOtp", "/ping", "/insertproductdata", "/admin/products/update", 
+                    "/admin/products/delete/**", "/admin/orders/update-status"
                 ).permitAll()
-                // Admin paths
-                .requestMatchers("/admin/**", "/prodectadd.html", "/prodectlist.html", "/insertproductdata").hasRole("ADMIN")
+                // Admin page paths
+                .requestMatchers("/admin/**", "/prodectadd.html", "/prodectlist.html").hasRole("ADMIN")
                 // Customer paths
                 .requestMatchers(
                     "/fulldeatailprodect.html", "/paymentgatvey.html", "/order.html", 
@@ -71,7 +75,7 @@ public class SecurityConfig {
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) -> {
                     String uri = request.getRequestURI();
-                    if (uri.startsWith("/admin") || uri.contains("prodectadd") || uri.contains("prodectlist") || uri.contains("insertproductdata")) {
+                    if (uri.startsWith("/admin") || uri.contains("prodectadd") || uri.contains("prodectlist")) {
                         response.sendRedirect("/admin.html");
                     } else {
                         response.sendRedirect("/login.html");
@@ -79,7 +83,7 @@ public class SecurityConfig {
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
                     String uri = request.getRequestURI();
-                    if (uri.startsWith("/admin") || uri.contains("prodectadd") || uri.contains("prodectlist") || uri.contains("insertproductdata")) {
+                    if (uri.startsWith("/admin") || uri.contains("prodectadd") || uri.contains("prodectlist")) {
                         response.sendRedirect("/admin.html?error=forbidden");
                     } else {
                         response.sendRedirect("/login.html?error=forbidden");

@@ -32,7 +32,6 @@
             min-height: 100vh;
         }
 
-        /* SIDEBAR */
         .sidebar {
             width: 280px;
             background: var(--deep);
@@ -82,7 +81,6 @@
             transform: translateX(4px);
         }
 
-        /* MAIN CONTENT */
         .main-content {
             margin-left: 280px;
             flex: 1;
@@ -127,7 +125,6 @@
             transform: translateY(-2px);
         }
 
-        /* TABLE */
         .table-card {
             background: var(--card);
             border: 1px solid var(--glass-border);
@@ -199,7 +196,6 @@
             border-color: #ef4444;
         }
 
-        /* MODAL */
         .modal {
             display: none;
             position: fixed;
@@ -217,6 +213,8 @@
             border-radius: 12px;
             width: 90%;
             max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
             padding: 40px;
             position: relative;
             animation: fadeIn 0.4s ease;
@@ -301,7 +299,6 @@
 </head>
 <body>
 
-    <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="sidebar-logo">KSLEEP</div>
         <ul class="menu-list">
@@ -315,7 +312,6 @@
         </ul>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="main-content">
         <div class="header">
             <h1 class="title">Product <em>Management</em></h1>
@@ -337,7 +333,7 @@
                 <tbody>
                     <tr th:each="prod : ${products}">
                         <td>
-                            <img th:src="${prod.image1 != null ? '/images/' + prod.image1 : '/images/default.jpg'}" class="prod-img">
+                            <img th:src="${prod.image1 != null ? (prod.image1.startsWith('data:') or prod.image1.startsWith('http') ? prod.image1 : '/images/' + prod.image1) : 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=100&q=80'}" class="prod-img">
                         </td>
                         <td th:text="${prod.productName}">Product Name</td>
                         <td th:text="'₹' + ${#numbers.formatDecimal(prod.price, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
@@ -359,28 +355,32 @@
                             </div>
                         </td>
                     </tr>
+                    <tr th:if="${#lists.isEmpty(products)}">
+                        <td colspan="6" style="text-align: center; color: var(--muted); padding: 40px;">
+                            No products found in database. Click <strong>Add Product</strong> above to create your first product!
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- ADD PRODUCT MODAL -->
     <div class="modal" id="addModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('addModal')">&times;</span>
             <h2 class="modal-title">Add New Product</h2>
-            <form th:action="@{/insertproductdata}" method="POST" enctype="multipart/form-data" onsubmit="return validateAddForm(this);">
+            <form action="/insertproductdata" th:action="@{/insertproductdata}" method="POST" enctype="multipart/form-data" onsubmit="return validateAddForm(this);">
                 <div class="form-group">
                     <label class="form-label">Product Name</label>
-                    <input type="text" name="productName" required>
+                    <input type="text" name="productName" placeholder="e.g. Memory Foam Mattress" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Price (₹)</label>
-                    <input type="number" step="0.01" name="price" required>
+                    <input type="number" step="0.01" name="price" placeholder="e.g. 14999" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Material Used</label>
-                    <input type="text" name="material" required>
+                    <input type="text" name="material" placeholder="e.g. Memory Foam & Cotton" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Comfort Level</label>
@@ -392,30 +392,30 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Product Description</label>
-                    <textarea name="description" rows="3" required></textarea>
+                    <textarea name="description" rows="3" placeholder="Enter detailed product description" required></textarea>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Product Images (Upload File OR Paste URL)</label>
                     <div style="display: flex; flex-direction: column; gap: 12px;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
                             <input type="file" name="image1" accept="image/*">
-                            <input type="text" name="imageUrl1" placeholder="Or paste Image 1 URL">
+                            <input type="text" name="imageUrl1" placeholder="Image 1 URL (Required)">
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
                             <input type="file" name="image2" accept="image/*">
-                            <input type="text" name="imageUrl2" placeholder="Or paste Image 2 URL">
+                            <input type="text" name="imageUrl2" placeholder="Image 2 URL (Optional)">
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
                             <input type="file" name="image3" accept="image/*">
-                            <input type="text" name="imageUrl3" placeholder="Or paste Image 3 URL">
+                            <input type="text" name="imageUrl3" placeholder="Image 3 URL (Optional)">
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
                             <input type="file" name="image4" accept="image/*">
-                            <input type="text" name="imageUrl4" placeholder="Or paste Image 4 URL">
+                            <input type="text" name="imageUrl4" placeholder="Image 4 URL (Optional)">
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
                             <input type="file" name="image5" accept="image/*">
-                            <input type="text" name="imageUrl5" placeholder="Or paste Image 5 URL">
+                            <input type="text" name="imageUrl5" placeholder="Image 5 URL (Optional)">
                         </div>
                     </div>
                 </div>
@@ -424,12 +424,11 @@
         </div>
     </div>
 
-    <!-- EDIT PRODUCT MODAL -->
     <div class="modal" id="editModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('editModal')">&times;</span>
             <h2 class="modal-title">Edit Product</h2>
-            <form th:action="@{/admin/products/update}" method="POST" enctype="multipart/form-data">
+            <form action="/admin/products/update" th:action="@{/admin/products/update}" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id" id="edit-id">
                 <div class="form-group">
                     <label class="form-label">Product Name</label>
@@ -491,14 +490,6 @@
         }
 
         function validateAddForm(form) {
-            for (let i = 1; i <= 5; i++) {
-                const fileInput = form.querySelector(`input[name="image${i}"]`);
-                const urlInput = form.querySelector(`input[name="imageUrl${i}"]`);
-                if ((!fileInput.files || fileInput.files.length === 0) && !urlInput.value.trim()) {
-                    alert('Please provide either an image file or an image URL for Image ' + i + '!');
-                    return false;
-                }
-            }
             return true;
         }
 
