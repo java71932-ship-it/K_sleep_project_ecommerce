@@ -50,7 +50,7 @@ public class Controllers {
     @Autowired
     prodectRepository pr;
 
-    @Autowired
+    @Autowired(required = false)
     JavaMailSender emailsender;
 
     @Autowired(required = false)
@@ -331,26 +331,7 @@ public class Controllers {
 
             ur.save(ue);
 
-            SimpleMailMessage m = new SimpleMailMessage();
-
-            String detail = "Username: " + username +
-                    "\nEmail: " + loginEmail +
-                    "\nMobile: " + mobile +
-                    "\nAddress: " + address +
-                    "\nState: " + state +
-                    "\nCity: " + city +
-                    "\nPincode: " + pincode +
-                    "\nProduct_id: " + product_id +
-                    "\nProduct_price: " + pprice +
-                    "\nProduct_name: " + pName;
-
-            m.setFrom(loginEmail);
-            m.setTo("pkumarsaini178@gmail.com");
-            m.setSubject("Order Of Customer");
-            m.setText(detail);
-
-            emailsender.send(m);
-
+            System.out.println("✦ Details saved for order by " + username);
             return "redirect:/index.html";
 
         } catch (Exception e) {
@@ -484,41 +465,7 @@ public class Controllers {
             System.out.println("Error saving customer profile: " + ex.getMessage());
         }
 
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("✦ Order Confirmed — KSleep");
-            message.setText(
-                    "Hello " + username + ",\n\n" +
-                            "Your order has been placed successfully!\n\n" +
-                            "Product  : " + pName + "\n" +
-                            "Price    : ₹" + pprice + "\n" +
-                            "Quantity : " + qty + "\n" +
-                            "Address  : " + address + ", " + city + ", " + state + " - " + pincode + "\n\n" +
-                            "Thank you for choosing KSleep ✦\n");
-            emailsender.send(message);
-
-            // Send notification to admin
-            SimpleMailMessage adminMessage = new SimpleMailMessage();
-            adminMessage.setTo("pkumarsaini178@gmail.com");
-            adminMessage.setSubject("✦ New Order Received — KSleep Admin");
-            adminMessage.setText(
-                    "Hello Admin,\n\n" +
-                            "A new order has been placed successfully!\n\n" +
-                            "Customer Name   : " + username + "\n" +
-                            "Customer Email  : " + finalEmail + "\n" +
-                            "Mobile Number   : " + mobile + "\n" +
-                            "Product Name    : " + pName + "\n" +
-                            "Price           : ₹" + pprice + "\n" +
-                            "Quantity        : " + qty + "\n" +
-                            "Delivery Address: " + address + ", " + city + ", " + state + " - " + pincode + "\n\n" +
-                            "Manage all orders at your Admin Dashboard."
-            );
-            emailsender.send(adminMessage);
-        } catch (Exception e) {
-            System.out.println("Email error: " + e.getMessage());
-        }
-
+        System.out.println("✦ Product ordered successfully by " + username + " (" + pName + ")");
         return "redirect:/order.html";
     }
 

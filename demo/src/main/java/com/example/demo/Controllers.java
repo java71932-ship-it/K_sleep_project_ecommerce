@@ -50,7 +50,7 @@ public class Controllers {
     @Autowired
     prodectRepository pr;
 
-    @Autowired
+    @Autowired(required = false)
     JavaMailSender emailsender;
 
     @Autowired(required = false)
@@ -331,26 +331,7 @@ public class Controllers {
 
             ur.save(ue);
 
-            SimpleMailMessage m = new SimpleMailMessage();
-
-            String detail = "Username: " + username +
-                    "\nEmail: " + loginEmail +
-                    "\nMobile: " + mobile +
-                    "\nAddress: " + address +
-                    "\nState: " + state +
-                    "\nCity: " + city +
-                    "\nPincode: " + pincode +
-                    "\nProduct_id: " + product_id +
-                    "\nProduct_price: " + pprice +
-                    "\nProduct_name: " + pName;
-
-            m.setFrom(loginEmail);
-            m.setTo("pkumarsaini178@gmail.com");
-            m.setSubject("Order Of Customer");
-            m.setText(detail);
-
-            emailsender.send(m);
-
+            System.out.println("✦ Details saved for order by " + username);
             return "redirect:/index.html";
 
         } catch (Exception e) {
@@ -484,41 +465,7 @@ public class Controllers {
             System.out.println("Error saving customer profile: " + ex.getMessage());
         }
 
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("✦ Order Confirmed — KSleep");
-            message.setText(
-                    "Hello " + username + ",\n\n" +
-                            "Your order has been placed successfully!\n\n" +
-                            "Product  : " + pName + "\n" +
-                            "Price    : ₹" + pprice + "\n" +
-                            "Quantity : " + qty + "\n" +
-                            "Address  : " + address + ", " + city + ", " + state + " - " + pincode + "\n\n" +
-                            "Thank you for choosing KSleep ✦\n");
-            emailsender.send(message);
-
-            // Send notification to admin
-            SimpleMailMessage adminMessage = new SimpleMailMessage();
-            adminMessage.setTo("pkumarsaini178@gmail.com");
-            adminMessage.setSubject("✦ New Order Received — KSleep Admin");
-            adminMessage.setText(
-                    "Hello Admin,\n\n" +
-                            "A new order has been placed successfully!\n\n" +
-                            "Customer Name   : " + username + "\n" +
-                            "Customer Email  : " + finalEmail + "\n" +
-                            "Mobile Number   : " + mobile + "\n" +
-                            "Product Name    : " + pName + "\n" +
-                            "Price           : ₹" + pprice + "\n" +
-                            "Quantity        : " + qty + "\n" +
-                            "Delivery Address: " + address + ", " + city + ", " + state + " - " + pincode + "\n\n" +
-                            "Manage all orders at your Admin Dashboard."
-            );
-            emailsender.send(adminMessage);
-        } catch (Exception e) {
-            System.out.println("Email error: " + e.getMessage());
-        }
-
+        System.out.println("✦ Product ordered successfully by " + username + " (" + pName + ")");
         return "redirect:/order.html";
     }
 
@@ -547,39 +494,6 @@ public class Controllers {
             return "Order not found";
         }
 
-        String name = order.getCustomerName();
-        String email = order.getEmail();
-        String productname = order.getProductName();
-        Long productid = order.getProductId();
-        String address = order.getAddress();
-        double price = order.getPrice();
-        String mobileno = order.getMobile_No();
-        String date = order.getOrderDate().toString();
-
-        String detail = "Hello " + name + ",\n\n" +
-                "Your order has been cancelled successfully.\n\n" +
-
-                "Product Details:\n" +
-                "Product Name : " + productname + "\n" +
-                "Product ID : " + productid + "\n" +
-                "Price : ₹" + price + "\n\n" +
-
-                "Delivery Address:\n" +
-                address + "\n\n" +
-                "Mobile_no :" + mobileno +
-
-                "Order Date : " + date + "\n\n" +
-
-                "Cancellation Reason : " + reason + "\n" +
-                "Additional Comment : " + comment + "\n\n";
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Order Cancellation Confirmation");
-        message.setText(detail);
-
-        emailsender.send(message);
-
         or.deleteById(id);
 
         return "Order cancelled successfully";
@@ -588,20 +502,8 @@ public class Controllers {
     @PostMapping("/sendContactEmail")
     public String sendemailforcontect(@RequestParam String name, @RequestParam String email, @RequestParam long phone,
             @RequestParam String type, @RequestParam String message) {
-        SimpleMailMessage ms = new SimpleMailMessage();
 
-        String contectDeatails = ""
-                + "Customer_Name:" + name +
-                "Customer_email" + email +
-                "Customer_phone_no." + phone +
-                "Question Type" + type +
-                "Message of Customer " + message +
-                "";
-        ms.setTo("pkumarsaini178@gmail.com");
-        ms.setSubject(type + " Information regarding ");
-        ms.setText(contectDeatails);
-        emailsender.send(ms);
-
+        System.out.println("✦ Contact inquiry received from: " + name + " (" + email + ")");
         return "redirect:/index.html";
     }
 
