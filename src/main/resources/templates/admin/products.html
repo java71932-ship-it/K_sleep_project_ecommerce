@@ -507,6 +507,18 @@
             document.getElementById(id).style.display = 'none';
         }
 
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+            if (status === 'success') {
+                alert('✦ Success: Product has been stored in the database!');
+            } else if (status === 'updated') {
+                alert('✦ Success: Product details updated in the database!');
+            } else if (status === 'error') {
+                alert('❌ Error: Failed to save product to the database!');
+            }
+        });
+
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';

@@ -206,12 +206,12 @@ public class Controllers {
 
             prodectentity saved = pr.save(pe);
             System.out.println("✦ Successfully saved product ID: " + saved.getId() + " - Name: " + saved.getProductName());
+            return "redirect:/admin/products?status=success";
         } catch (Exception e) {
             System.out.println("❌ Error saving product: " + e.getMessage());
             e.printStackTrace();
+            return "redirect:/admin/products?status=error";
         }
-
-        return "redirect:/admin/products";
     }
 
     // ===============================
@@ -729,10 +729,12 @@ public class Controllers {
                 if (img5Name != null) pe.setImage5(img5Name);
 
                 pr.save(pe);
+                return "redirect:/admin/products?status=updated";
             }
         } catch (Exception e) {
             System.out.println("Error updating product: " + e.getMessage());
             e.printStackTrace();
+            return "redirect:/admin/products?status=error";
         }
 
         return "redirect:/admin/products";
