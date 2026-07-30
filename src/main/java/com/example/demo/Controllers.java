@@ -70,7 +70,14 @@ public class Controllers {
                     jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image3 LONGTEXT");
                     jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image4 LONGTEXT");
                     jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image5 LONGTEXT");
+                } else {
+                    jdbcTemplate.execute("ALTER TABLE product_table ALTER COLUMN image1 TYPE TEXT");
+                    jdbcTemplate.execute("ALTER TABLE product_table ALTER COLUMN image2 TYPE TEXT");
+                    jdbcTemplate.execute("ALTER TABLE product_table ALTER COLUMN image3 TYPE TEXT");
+                    jdbcTemplate.execute("ALTER TABLE product_table ALTER COLUMN image4 TYPE TEXT");
+                    jdbcTemplate.execute("ALTER TABLE product_table ALTER COLUMN image5 TYPE TEXT");
                 }
+                System.out.println("✦ Successfully updated product_table image columns to TEXT");
             } catch (Exception e) {
                 System.out.println("Column alter check: " + e.getMessage());
             }
