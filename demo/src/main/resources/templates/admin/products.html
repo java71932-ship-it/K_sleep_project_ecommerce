@@ -515,7 +515,8 @@
             } else if (status === 'updated') {
                 alert('✦ Success: Product details updated in the database!');
             } else if (status === 'error') {
-                alert('❌ Error: Failed to save product to the database!');
+                const msg = urlParams.get('msg');
+                alert('❌ Error saving product:\n' + (msg ? decodeURIComponent(msg) : 'Database error. Check server logs.'));
             }
         });
 

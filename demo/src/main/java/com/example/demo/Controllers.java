@@ -62,12 +62,15 @@ public class Controllers {
     @PostConstruct
     public void initAdmin() {
         if (jdbcTemplate != null) {
-            try {
-                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image1 LONGTEXT");
-                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image2 LONGTEXT");
-                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image3 LONGTEXT");
-                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image4 LONGTEXT");
-                jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image5 LONGTEXT");
+            try (java.sql.Connection conn = jdbcTemplate.getDataSource().getConnection()) {
+                String driverName = conn.getMetaData().getDriverName().toLowerCase();
+                if (driverName.contains("mysql")) {
+                    jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image1 LONGTEXT");
+                    jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image2 LONGTEXT");
+                    jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image3 LONGTEXT");
+                    jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image4 LONGTEXT");
+                    jdbcTemplate.execute("ALTER TABLE product_table MODIFY COLUMN image5 LONGTEXT");
+                }
             } catch (Exception e) {
                 System.out.println("Column alter check: " + e.getMessage());
             }
@@ -210,7 +213,11 @@ public class Controllers {
         } catch (Exception e) {
             System.out.println("❌ Error saving product: " + e.getMessage());
             e.printStackTrace();
-            return "redirect:/admin/products?status=error";
+            String errorMsg = e.getMessage() != null ? e.getMessage() : "Database Save Error";
+            try {
+                errorMsg = java.net.URLEncoder.encode(errorMsg, "UTF-8");
+            } catch (Exception ex) {}
+            return "redirect:/admin/products?status=error&msg=" + errorMsg;
         }
     }
 
@@ -734,7 +741,11 @@ public class Controllers {
         } catch (Exception e) {
             System.out.println("Error updating product: " + e.getMessage());
             e.printStackTrace();
-            return "redirect:/admin/products?status=error";
+            String errorMsg = e.getMessage() != null ? e.getMessage() : "Database Update Error";
+            try {
+                errorMsg = java.net.URLEncoder.encode(errorMsg, "UTF-8");
+            } catch (Exception ex) {}
+            return "redirect:/admin/products?status=error&msg=" + errorMsg;
         }
 
         return "redirect:/admin/products";
