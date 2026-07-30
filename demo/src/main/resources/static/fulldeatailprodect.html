@@ -401,11 +401,19 @@ function goToPayment(){
 
   const email = localStorage.getItem("userEmail") || "";
 
+  let imageParam = selectedImage || '';
+  if (imageParam.startsWith('data:')) {
+    sessionStorage.setItem('paymentImage', imageParam);
+    imageParam = '';
+  } else {
+    sessionStorage.setItem('paymentImage', imageParam);
+  }
+
   const url = 'paymentgatvey.html'
     + '?id='    + encodeURIComponent(productId)
     + '&price=' + encodeURIComponent(productPrice)
     + '&name='  + encodeURIComponent(productName)
-    + '&image=' + encodeURIComponent(selectedImage)
+    + '&image=' + encodeURIComponent(imageParam)
     + '&qty='   + encodeURIComponent(qty)
     + '&email=' + encodeURIComponent(email);
 

@@ -377,7 +377,7 @@ window.onload = function() {
   const id    = params.get('id')    || '';
   const price = params.get('price') || '';
   const name  = params.get('name')  || '';
-  const image = params.get('image') || '';
+  let image   = params.get('image') || sessionStorage.getItem('paymentImage') || '';
   const qty   = params.get('qty')   || '1';
 
   // ✅ Fill ALL hidden form fields
@@ -396,13 +396,13 @@ window.onload = function() {
         document.getElementById('summaryImg').src     = img;
       })
       .catch(() => {
-        // Fallback: use image from URL param
+        // Fallback: use image from URL param or sessionStorage
         document.getElementById('productImage').value = image;
-        if(image) document.getElementById('summaryImg').src = decodeURIComponent(image);
+        if(image) document.getElementById('summaryImg').src = image;
       });
   } else if(image) {
-    document.getElementById('productImage').value = decodeURIComponent(image);
-    document.getElementById('summaryImg').src     = decodeURIComponent(image);
+    document.getElementById('productImage').value = image;
+    document.getElementById('summaryImg').src     = image;
   }
 
   // ── Populate order summary UI ──
