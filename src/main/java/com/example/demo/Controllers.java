@@ -621,7 +621,13 @@ public class Controllers {
 
     @GetMapping("/admin/products")
     public String adminProducts(Model model) {
-        model.addAttribute("products", pr.findAll());
+        try {
+            model.addAttribute("products", pr.findAll());
+        } catch (Exception e) {
+            System.out.println("Error fetching products for admin view: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("products", List.of());
+        }
         return "admin/products";
     }
 
