@@ -35,9 +35,13 @@ services:
         fromDatabase:
           name: ksleep-db
           property: password
+      - key: SPRING_MAIL_HOST
+        value: in-v3.mailjet.com
+      - key: SPRING_MAIL_PORT
+        value: "587"
       - key: SPRING_MAIL_USERNAME
-        value: rockh7189@gmail.com
+        sync: false
       - key: SPRING_MAIL_PASSWORD
-        value: ncafnqcmhoxyhjts
+        sync: false
       - key: JWT_SECRET
         generateValue: true

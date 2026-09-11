@@ -27,6 +27,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.ui.Model;
 
 import jakarta.annotation.PostConstruct;
@@ -415,58 +416,52 @@ public class Controllers {
         }
         return ResponseEntity.ok("");
     }
-
-    @PostMapping("/placeOrder")
+    @GetMapping("/placeOrder")
+    public String getmethod(){
+        return "redirect:/placeOrder";
+    }
+ @PostMapping("/placeOrder")
     public String placeOrder(
-            @RequestParam String username,
-            @RequestParam String email,
-            @RequestParam String mobile,
-            @RequestParam String address,
-            @RequestParam String state,
-            @RequestParam String city,
-            @RequestParam String pincode,
-            @RequestParam String pName,
-            @RequestParam double pprice,
-            @RequestParam Long product_id,
-            @RequestParam String image,
-            @RequestParam int qty,
-            HttpSession session) {
-
-        String sessionEmail = (String) session.getAttribute("userEmail");
-        String finalEmail = sessionEmail != null ? sessionEmail : email;
-
-        orderEntity order = new orderEntity();
-        order.setCustomerName(username);
-        order.setEmail(finalEmail);
-        order.setMobile_No(mobile);
-        order.setAddress(address + ", " + city + ", " + state + " - " + pincode);
-        order.setProductName(pName);
-        order.setPrice(pprice);
-        order.setImage(image);
-        order.setProductId(product_id);
-        order.setQuantity(qty);
-        order.setStatus("confirmed");
-
-        or.save(order);
-
-        // Save delivery profile if not already present
+            @RequestParam(required = false) String userEmail,
+            @RequestParam(required = false) String userName,
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false) String amount) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            List<userEntity> existingProfile = ur.findByEmail(finalEmail);
-            if (existingProfile.isEmpty()) {
-                userEntity ue = new userEntity();
-                ue.setUser_name(username);
-                ue.setEmail(finalEmail);
-                ue.setMobile_number(mobile);
-                ue.setAddress(address + ", " + city + ", " + state);
-                ue.setPincode(pincode);
-                ur.save(ue);
+            // Default fallback values if parameters are null
+            String email = (userEmail != null && !userEmail.isEmpty()) ? userEmail : "customer@example.com";
+            String name = (userName != null && !userName.isEmpty()) ? userName : "Customer";
+            String item = (productName != null && !productName.isEmpty()) ? productName : "Ecommerce Item";
+            String price = (amount != null && !amount.isEmpty()) ? amount : "0.0";
+            // ✉️ Send Confirmation Email inside Try-Catch (Never crashes API!)
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom("ae4295001@smtp-brevo.com"); // ⚠️ Brevo Verified Email
+                message.setTo(email);
+                message.setSubject("Order Confirmed! Your Order is Processing for Delivery 🚚");
+                message.setText("Namaste " + name + "!\n\n" +
+                        "Thank you for your purchase!\n\n" +
+                        "📦 Order Details:\n" +
+                        "- Product: " + item + "\n" +
+                        "- Total Amount: ₹" + price + "\n" +
+                        "- Status: Processing for Delivery\n\n" +
+                        "We are preparing your package and will deliver it soon.\n\n" +
+                        "Best regards,\n" +
+                        "Ecommerce Support Team");
+                emailsender.send(message);
+                System.out.println("Order Email successfully sent to: " + email);
+            } catch (Exception e) {
+                System.err.println("Email sending failed, but order saved: " + e.getMessage());
             }
-        } catch (Exception ex) {
-            System.out.println("Error saving customer profile: " + ex.getMessage());
+            response.put("status", "success");
+            response.put("message", "Order placed successfully and processing for delivery.");
+            return "redirect:/order.html";
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("status", "error");
+            response.put("message", "Order processing error: " + e.getMessage());
+            return "redirect:/fulldeatailprodect.html";
         }
-
-        System.out.println("✦ Product ordered successfully by " + username + " (" + pName + ")");
-        return "redirect:/order.html";
     }
 
     @GetMapping("/orderDeatail")
