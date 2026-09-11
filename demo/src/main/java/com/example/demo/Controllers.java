@@ -443,38 +443,100 @@ public class Controllers {
 
     @GetMapping("/placeOrder")
     public String getmethod() {
-        return "redirect:/placeOrder";
+        return "redirect:/order.html";
     }
 
- @PostMapping("/placeOrder")
+    @PostMapping("/placeOrder")
     public String placeOrder(
-            @RequestParam(required = false) String userEmail,
+            @RequestParam(required = false) String username,
             @RequestParam(required = false) String userName,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String userEmail,
+            @RequestParam(required = false) String pName,
             @RequestParam(required = false) String productName,
-            @RequestParam(required = false) String amount) {
-        Map<String, Object> response = new HashMap<>();
+            @RequestParam(required = false) String pprice,
+            @RequestParam(required = false) String amount,
+            @RequestParam(required = false) String product_id,
+            @RequestParam(required = false) String image,
+            @RequestParam(required = false) String qty,
+            @RequestParam(required = false) String mobile,
+            @RequestParam(required = false) String address,
+            HttpSession session) {
+
         try {
-            // Default fallback values if parameters are null
-            String email = (userEmail != null && !userEmail.isEmpty()) ? userEmail : "customer@example.com";
-            String name = (userName != null && !userName.isEmpty()) ? userName : "Customer";
-            String item = (productName != null && !productName.isEmpty()) ? productName : "Ecommerce Item";
-            String price = (amount != null && !amount.isEmpty()) ? amount : "0.0";
-            // ✉️ Send Confirmation Email inside Try-Catch (Never crashes API!)
+            // Resolve recipient email
+            String finalEmail = (email != null && !email.trim().isEmpty()) ? email.trim() : userEmail;
+            if (finalEmail == null || finalEmail.trim().isEmpty()) {
+                finalEmail = (String) session.getAttribute("userEmail");
+            }
+            if (finalEmail == null || finalEmail.trim().isEmpty()) {
+                finalEmail = "customer@example.com";
+            }
+
+            // Resolve recipient name
+            String finalName = (username != null && !username.trim().isEmpty()) ? username.trim() : userName;
+            if (finalName == null || finalName.trim().isEmpty()) {
+                finalName = "Customer";
+            }
+
+            // Resolve product item name
+            String finalItem = (pName != null && !pName.trim().isEmpty()) ? pName.trim() : productName;
+            if (finalItem == null || finalItem.trim().isEmpty()) {
+                finalItem = "Ecommerce Item";
+            }
+
+            // Resolve price amount
+            String finalPriceStr = (pprice != null && !pprice.trim().isEmpty()) ? pprice.trim() : amount;
+            if (finalPriceStr == null || finalPriceStr.trim().isEmpty()) {
+                finalPriceStr = "0.0";
+            }
+
+            double numPrice = 0.0;
+            try {
+                numPrice = Double.parseDouble(finalPriceStr.replaceAll("[^0-9.]", ""));
+            } catch (Exception e) {}
+
+            int numQty = 1;
+            if (qty != null && !qty.trim().isEmpty()) {
+                try {
+                    numQty = Integer.parseInt(qty.trim());
+                } catch (Exception e) {}
+            }
+
+            Long pId = null;
+            if (product_id != null && !product_id.trim().isEmpty()) {
+                try {
+                    pId = Long.parseLong(product_id.trim());
+                } catch (Exception e) {}
+            }
+
+            // 💾 Save order to database
+            orderEntity order = new orderEntity();
+            order.setCustomerName(finalName);
+            order.setEmail(finalEmail);
+            order.setProductName(finalItem);
+            order.setPrice(numPrice);
+            order.setQuantity(numQty);
+            order.setProductId(pId);
+            order.setImage(image);
+            order.setMobile_No(mobile);
+            order.setAddress(address);
+            order.setStatus("PLACED");
+            or.save(order);
+
+            // ✉️ Send Confirmation Email
             try {
                 String subject = "Order Confirmed! Your Order is Processing for Delivery 🚚";
-                String textPart = "Namaste " + name + "!\n\nThank you for your purchase!\n\n📦 Order Details:\n- Product: " + item + "\n- Total Amount: ₹" + price + "\n- Status: Processing for Delivery\n\nWe are preparing your package and will deliver it soon.\n\nBest regards,\nEcommerce Support Team";
-                String htmlPart = "<h3>Namaste " + name + "!</h3><p>Thank you for your purchase!</p><p>📦 Order Details:<br>- Product: " + item + "<br>- Total Amount: ₹" + price + "<br>- Status: Processing for Delivery</p><p>We are preparing your package and will deliver it soon.</p><p>Best regards,<br>Ecommerce Support Team</p>";
-                sendMailjetEmail(email, name, subject, textPart, htmlPart);
+                String textPart = "Namaste " + finalName + "!\n\nThank you for your purchase!\n\n📦 Order Details:\n- Product: " + finalItem + "\n- Total Amount: ₹" + finalPriceStr + "\n- Status: Processing for Delivery\n\nWe are preparing your package and will deliver it soon.\n\nBest regards,\nEcommerce Support Team";
+                String htmlPart = "<h3>Namaste " + finalName + "!</h3><p>Thank you for your purchase!</p><p>📦 Order Details:<br>- Product: " + finalItem + "<br>- Total Amount: ₹" + finalPriceStr + "<br>- Status: Processing for Delivery</p><p>We are preparing your package and will deliver it soon.</p><p>Best regards,<br>Ecommerce Support Team</p>";
+                sendMailjetEmail(finalEmail, finalName, subject, textPart, htmlPart);
             } catch (Exception e) {
                 System.err.println("Mailjet email sending failed, but order saved: " + e.getMessage());
             }
-            response.put("status", "success");
-            response.put("message", "Order placed successfully and processing for delivery.");
+
             return "redirect:/order.html";
         } catch (Exception e) {
             e.printStackTrace();
-            response.put("status", "error");
-            response.put("message", "Order processing error: " + e.getMessage());
             return "redirect:/fulldeatailprodect.html";
         }
     }
