@@ -484,14 +484,96 @@
         </div>
     </div>
 
+    <!-- ── SUPABASE STORAGE INTEGRATION ── -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        const SUPABASE_URL = 'https://xsxoxvvdnhqkifyqjsdb.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_lGPeQobcmP9zZlCEbMXeDw_HOYWK8S_';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         function openAddModal() {
             document.getElementById('addModal').style.display = 'flex';
         }
 
-        function validateAddForm(form) {
+        async function handleFormSupabaseUpload(form) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = 'Uploading Images to Supabase... ⏳';
+            }
+
+            const fileInputs = [
+                { fileEl: form.querySelector('input[name="image1"]'), urlEl: form.querySelector('input[name="imageUrl1"]') },
+                { fileEl: form.querySelector('input[name="image2"]'), urlEl: form.querySelector('input[name="imageUrl2"]') },
+                { fileEl: form.querySelector('input[name="image3"]'), urlEl: form.querySelector('input[name="imageUrl3"]') },
+                { fileEl: form.querySelector('input[name="image4"]'), urlEl: form.querySelector('input[name="imageUrl4"]') },
+                { fileEl: form.querySelector('input[name="image5"]'), urlEl: form.querySelector('input[name="imageUrl5"]') }
+            ];
+
+            for (let i = 0; i < fileInputs.length; i++) {
+                const item = fileInputs[i];
+                if (item.fileEl && item.fileEl.files && item.fileEl.files.length > 0) {
+                    const file = item.fileEl.files[0];
+                    const safeName = Date.now() + '_' + Math.random().toString(36).substring(2, 6) + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                    
+                    try {
+                        const { data, error } = await supabaseClient.storage
+                            .from('product-images')
+                            .upload(safeName, file, { cacheControl: '3600', upsert: true });
+
+                        if (error) {
+                            console.error('Supabase upload error for image ' + (i + 1) + ':', error.message);
+                        } else {
+                            const { data: publicUrlData } = supabaseClient.storage
+                                .from('product-images')
+                                .getPublicUrl(safeName);
+
+                            if (publicUrlData && publicUrlData.publicUrl) {
+                                if (item.urlEl) item.urlEl.value = publicUrlData.publicUrl;
+                                item.fileEl.value = ''; // Clear file input
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Upload exception:', err);
+                    }
+                }
+            }
+
+            if (submitBtn) submitBtn.innerText = 'Saving Product... 💾';
             return true;
         }
+
+        // Add event listener to forms on DOMContentLoaded
+        window.addEventListener('DOMContentLoaded', function() {
+            const addForm = document.querySelector('#addModal form');
+            if (addForm) {
+                addForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    await handleFormSupabaseUpload(addForm);
+                    addForm.submit();
+                });
+            }
+
+            const editForm = document.querySelector('#editModal form');
+            if (editForm) {
+                editForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    await handleFormSupabaseUpload(editForm);
+                    editForm.submit();
+                });
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+            if (status === 'success') {
+                alert('✦ Success: Product stored in database with Supabase image CDN!');
+            } else if (status === 'updated') {
+                alert('✦ Success: Product details updated!');
+            } else if (status === 'error') {
+                const msg = urlParams.get('msg');
+                alert('❌ Error saving product:\n' + (msg ? decodeURIComponent(msg) : 'Database error. Check server logs.'));
+            }
+        });
 
         function openEditModal(button) {
             document.getElementById('edit-id').value = button.getAttribute('data-id');
@@ -506,19 +588,6 @@
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
         }
-
-        window.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const status = urlParams.get('status');
-            if (status === 'success') {
-                alert('✦ Success: Product has been stored in the database!');
-            } else if (status === 'updated') {
-                alert('✦ Success: Product details updated in the database!');
-            } else if (status === 'error') {
-                const msg = urlParams.get('msg');
-                alert('❌ Error saving product:\n' + (msg ? decodeURIComponent(msg) : 'Database error. Check server logs.'));
-            }
-        });
 
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
