@@ -21,14 +21,21 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.ui.Model;
+import com.mailjet.client.errors.MailjetException;
+import com.mailjet.client.MailjetClient;
+import com.mailjet.client.MailjetRequest;
+import com.mailjet.client.MailjetResponse;
+import com.mailjet.client.ClientOptions;
+import com.mailjet.client.resource.Emailv31;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpSession;
@@ -50,9 +57,6 @@ public class Controllers {
 
     @Autowired
     prodectRepository pr;
-
-    @Autowired(required = false)
-    JavaMailSender emailsender;
 
     @Autowired(required = false)
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
@@ -99,8 +103,10 @@ public class Controllers {
             p1.setPrice(18999.00);
             p1.setMaterial("Orthopedic Memory Foam & Organic Cotton");
             p1.setComfortLevel("High Comfort");
-            p1.setProductDescription("Experience blissful sleep with multi-layer orthopedic support and breathable airflow design.");
-            p1.setImage1("https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80");
+            p1.setProductDescription(
+                    "Experience blissful sleep with multi-layer orthopedic support and breathable airflow design.");
+            p1.setImage1(
+                    "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80");
             pr.save(p1);
 
             prodectentity p2 = new prodectentity();
@@ -109,7 +115,8 @@ public class Controllers {
             p2.setMaterial("Pocket Spring & High Resilience Foam");
             p2.setComfortLevel("Medium Comfort");
             p2.setProductDescription("Engineered for perfect spinal alignment and zero motion transfer.");
-            p2.setImage1("https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80");
+            p2.setImage1(
+                    "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80");
             pr.save(p2);
         }
     }
@@ -153,7 +160,7 @@ public class Controllers {
             jakarta.servlet.http.HttpServletResponse response) {
 
         boolean isValidAdmin = ("pankaj".equals(name) && "Pankaj@3287".equals(password))
-            || !sr.findByEmailAndPassword(email, password).isEmpty();
+                || !sr.findByEmailAndPassword(email, password).isEmpty();
 
         if (isValidAdmin) {
             session.setAttribute("userEmail", email);
@@ -209,14 +216,20 @@ public class Controllers {
             String img4Name = processImageInput(file4, imageUrl4);
             String img5Name = processImageInput(file5, imageUrl5);
 
-            if (img1Name != null) pe.setImage1(img1Name);
-            if (img2Name != null) pe.setImage2(img2Name);
-            if (img3Name != null) pe.setImage3(img3Name);
-            if (img4Name != null) pe.setImage4(img4Name);
-            if (img5Name != null) pe.setImage5(img5Name);
+            if (img1Name != null)
+                pe.setImage1(img1Name);
+            if (img2Name != null)
+                pe.setImage2(img2Name);
+            if (img3Name != null)
+                pe.setImage3(img3Name);
+            if (img4Name != null)
+                pe.setImage4(img4Name);
+            if (img5Name != null)
+                pe.setImage5(img5Name);
 
             prodectentity saved = pr.save(pe);
-            System.out.println("✦ Successfully saved product ID: " + saved.getId() + " - Name: " + saved.getProductName());
+            System.out.println(
+                    "✦ Successfully saved product ID: " + saved.getId() + " - Name: " + saved.getProductName());
             return "redirect:/admin/products?status=success";
         } catch (Exception e) {
             System.out.println("❌ Error saving product: " + e.getMessage());
@@ -224,7 +237,8 @@ public class Controllers {
             String errorMsg = e.getMessage() != null ? e.getMessage() : "Database Save Error";
             try {
                 errorMsg = java.net.URLEncoder.encode(errorMsg, "UTF-8");
-            } catch (Exception ex) {}
+            } catch (Exception ex) {
+            }
             return "redirect:/admin/products?status=error&msg=" + errorMsg;
         }
     }
@@ -239,15 +253,20 @@ public class Controllers {
 
         return pr.findAll().stream().map(product -> {
 
-            if (product.getImage1() != null && !product.getImage1().startsWith("data:") && !product.getImage1().startsWith("http"))
+            if (product.getImage1() != null && !product.getImage1().startsWith("data:")
+                    && !product.getImage1().startsWith("http"))
                 product.setImage1("/images/" + product.getImage1());
-            if (product.getImage2() != null && !product.getImage2().startsWith("data:") && !product.getImage2().startsWith("http"))
+            if (product.getImage2() != null && !product.getImage2().startsWith("data:")
+                    && !product.getImage2().startsWith("http"))
                 product.setImage2("/images/" + product.getImage2());
-            if (product.getImage3() != null && !product.getImage3().startsWith("data:") && !product.getImage3().startsWith("http"))
+            if (product.getImage3() != null && !product.getImage3().startsWith("data:")
+                    && !product.getImage3().startsWith("http"))
                 product.setImage3("/images/" + product.getImage3());
-            if (product.getImage4() != null && !product.getImage4().startsWith("data:") && !product.getImage4().startsWith("http"))
+            if (product.getImage4() != null && !product.getImage4().startsWith("data:")
+                    && !product.getImage4().startsWith("http"))
                 product.setImage4("/images/" + product.getImage4());
-            if (product.getImage5() != null && !product.getImage5().startsWith("data:") && !product.getImage5().startsWith("http"))
+            if (product.getImage5() != null && !product.getImage5().startsWith("data:")
+                    && !product.getImage5().startsWith("http"))
                 product.setImage5("/images/" + product.getImage5());
 
             return product;
@@ -262,15 +281,20 @@ public class Controllers {
         prodectentity product = pr.findById(id).orElse(null);
 
         if (product != null) {
-            if (product.getImage1() != null && !product.getImage1().startsWith("data:") && !product.getImage1().startsWith("http"))
+            if (product.getImage1() != null && !product.getImage1().startsWith("data:")
+                    && !product.getImage1().startsWith("http"))
                 product.setImage1("/images/" + product.getImage1());
-            if (product.getImage2() != null && !product.getImage2().startsWith("data:") && !product.getImage2().startsWith("http"))
+            if (product.getImage2() != null && !product.getImage2().startsWith("data:")
+                    && !product.getImage2().startsWith("http"))
                 product.setImage2("/images/" + product.getImage2());
-            if (product.getImage3() != null && !product.getImage3().startsWith("data:") && !product.getImage3().startsWith("http"))
+            if (product.getImage3() != null && !product.getImage3().startsWith("data:")
+                    && !product.getImage3().startsWith("http"))
                 product.setImage3("/images/" + product.getImage3());
-            if (product.getImage4() != null && !product.getImage4().startsWith("data:") && !product.getImage4().startsWith("http"))
+            if (product.getImage4() != null && !product.getImage4().startsWith("data:")
+                    && !product.getImage4().startsWith("http"))
                 product.setImage4("/images/" + product.getImage4());
-            if (product.getImage5() != null && !product.getImage5().startsWith("data:") && !product.getImage5().startsWith("http"))
+            if (product.getImage5() != null && !product.getImage5().startsWith("data:")
+                    && !product.getImage5().startsWith("http"))
                 product.setImage5("/images/" + product.getImage5());
         }
 
@@ -416,10 +440,12 @@ public class Controllers {
         }
         return ResponseEntity.ok("");
     }
+
     @GetMapping("/placeOrder")
-    public String getmethod(){
+    public String getmethod() {
         return "redirect:/placeOrder";
     }
+
  @PostMapping("/placeOrder")
     public String placeOrder(
             @RequestParam(required = false) String userEmail,
@@ -435,26 +461,12 @@ public class Controllers {
             String price = (amount != null && !amount.isEmpty()) ? amount : "0.0";
             // ✉️ Send Confirmation Email inside Try-Catch (Never crashes API!)
             try {
-                SimpleMailMessage message = new SimpleMailMessage();
-                String fromEmail = System.getenv("SPRING_MAIL_FROM");
-                if (fromEmail != null && !fromEmail.trim().isEmpty()) {
-                    message.setFrom(fromEmail);
-                }
-                message.setTo(email);
-                message.setSubject("Order Confirmed! Your Order is Processing for Delivery 🚚");
-                message.setText("Namaste " + name + "!\n\n" +
-                        "Thank you for your purchase!\n\n" +
-                        "📦 Order Details:\n" +
-                        "- Product: " + item + "\n" +
-                        "- Total Amount: ₹" + price + "\n" +
-                        "- Status: Processing for Delivery\n\n" +
-                        "We are preparing your package and will deliver it soon.\n\n" +
-                        "Best regards,\n" +
-                        "Ecommerce Support Team");
-                emailsender.send(message);
-                System.out.println("Order Email successfully sent to: " + email);
+                String subject = "Order Confirmed! Your Order is Processing for Delivery 🚚";
+                String textPart = "Namaste " + name + "!\n\nThank you for your purchase!\n\n📦 Order Details:\n- Product: " + item + "\n- Total Amount: ₹" + price + "\n- Status: Processing for Delivery\n\nWe are preparing your package and will deliver it soon.\n\nBest regards,\nEcommerce Support Team";
+                String htmlPart = "<h3>Namaste " + name + "!</h3><p>Thank you for your purchase!</p><p>📦 Order Details:<br>- Product: " + item + "<br>- Total Amount: ₹" + price + "<br>- Status: Processing for Delivery</p><p>We are preparing your package and will deliver it soon.</p><p>Best regards,<br>Ecommerce Support Team</p>";
+                sendMailjetEmail(email, name, subject, textPart, htmlPart);
             } catch (Exception e) {
-                System.err.println("Email sending failed, but order saved: " + e.getMessage());
+                System.err.println("Mailjet email sending failed, but order saved: " + e.getMessage());
             }
             response.put("status", "success");
             response.put("message", "Order placed successfully and processing for delivery.");
@@ -517,10 +529,11 @@ public class Controllers {
                 .filter(o -> !"cancelled".equalsIgnoreCase(o.getStatus()))
                 .mapToDouble(o -> o.getPrice() * o.getQuantity())
                 .sum();
-        
+
         List<orderEntity> recentOrders = or.findAll().stream()
                 .sorted((o1, o2) -> {
-                    if (o1.getOrderDate() == null || o2.getOrderDate() == null) return 0;
+                    if (o1.getOrderDate() == null || o2.getOrderDate() == null)
+                        return 0;
                     return o2.getOrderDate().compareTo(o1.getOrderDate());
                 })
                 .limit(5)
@@ -555,14 +568,14 @@ public class Controllers {
     public String adminCustomers(Model model) {
         List<Entitysignup> customers = sr.findByRole("CUSTOMER");
         List<userEntity> profiles = ur.findAll();
-        
+
         Map<String, userEntity> profileMap = new HashMap<>();
         for (userEntity profile : profiles) {
             if (profile.getEmail() != null) {
                 profileMap.put(profile.getEmail().toLowerCase(), profile);
             }
         }
-        
+
         model.addAttribute("customers", customers);
         model.addAttribute("profileMap", profileMap);
         return "admin/customers";
@@ -581,7 +594,7 @@ public class Controllers {
                 .filter(o -> !"cancelled".equalsIgnoreCase(o.getStatus()))
                 .mapToDouble(o -> o.getPrice() * o.getQuantity())
                 .sum();
-        
+
         model.addAttribute("totalCustomers", totalCustomers);
         model.addAttribute("totalOrders", totalOrders);
         model.addAttribute("totalRevenue", totalRevenue);
@@ -621,26 +634,36 @@ public class Controllers {
         try {
             prodectentity pe = pr.findById(id).orElse(null);
             if (pe != null) {
-                if (productName != null) pe.setProductName(productName);
-                if (price != null) pe.setPrice(price);
-                if (material != null) pe.setMaterial(material);
-                if (comfort != null) pe.setComfortLevel(comfort);
-                if (description != null) pe.setProductDescription(description);
+                if (productName != null)
+                    pe.setProductName(productName);
+                if (price != null)
+                    pe.setPrice(price);
+                if (material != null)
+                    pe.setMaterial(material);
+                if (comfort != null)
+                    pe.setComfortLevel(comfort);
+                if (description != null)
+                    pe.setProductDescription(description);
 
                 String img1Name = processImageInput(file1, imageUrl1);
-                if (img1Name != null) pe.setImage1(img1Name);
+                if (img1Name != null)
+                    pe.setImage1(img1Name);
 
                 String img2Name = processImageInput(file2, imageUrl2);
-                if (img2Name != null) pe.setImage2(img2Name);
+                if (img2Name != null)
+                    pe.setImage2(img2Name);
 
                 String img3Name = processImageInput(file3, imageUrl3);
-                if (img3Name != null) pe.setImage3(img3Name);
+                if (img3Name != null)
+                    pe.setImage3(img3Name);
 
                 String img4Name = processImageInput(file4, imageUrl4);
-                if (img4Name != null) pe.setImage4(img4Name);
+                if (img4Name != null)
+                    pe.setImage4(img4Name);
 
                 String img5Name = processImageInput(file5, imageUrl5);
-                if (img5Name != null) pe.setImage5(img5Name);
+                if (img5Name != null)
+                    pe.setImage5(img5Name);
 
                 pr.save(pe);
                 return "redirect:/admin/products?status=updated";
@@ -651,7 +674,8 @@ public class Controllers {
             String errorMsg = e.getMessage() != null ? e.getMessage() : "Database Update Error";
             try {
                 errorMsg = java.net.URLEncoder.encode(errorMsg, "UTF-8");
-            } catch (Exception ex) {}
+            } catch (Exception ex) {
+            }
             return "redirect:/admin/products?status=error&msg=" + errorMsg;
         }
 
@@ -678,20 +702,21 @@ public class Controllers {
     @ResponseBody
     public Map<String, Object> getAnalyticsSummary() {
         Map<String, Object> data = new HashMap<>();
-        
+
         long totalCustomers = sr.countByRole("CUSTOMER");
         long totalOrders = or.count();
         double totalRevenue = or.findAll().stream()
                 .filter(o -> !"cancelled".equalsIgnoreCase(o.getStatus()))
                 .mapToDouble(o -> o.getPrice() * o.getQuantity())
                 .sum();
-            
+
         data.put("totalCustomers", totalCustomers);
         data.put("totalOrders", totalOrders);
         data.put("totalRevenue", totalRevenue);
-        
+
         Map<String, Integer> productQuantities = or.findAll().stream()
-                .collect(Collectors.groupingBy(orderEntity::getProductName, Collectors.summingInt(orderEntity::getQuantity)));
+                .collect(Collectors.groupingBy(orderEntity::getProductName,
+                        Collectors.summingInt(orderEntity::getQuantity)));
 
         List<Map<String, Object>> topProducts = productQuantities.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
@@ -714,7 +739,7 @@ public class Controllers {
                     return m;
                 }).toList();
         data.put("leastPurchasedProducts", leastProducts);
-        
+
         return data;
     }
 
@@ -725,9 +750,8 @@ public class Controllers {
                 .filter(o -> o.getOrderDate() != null && !"cancelled".equalsIgnoreCase(o.getStatus()))
                 .collect(Collectors.groupingBy(
                         o -> o.getOrderDate().getMonth().toString(),
-                        Collectors.summingDouble(o -> o.getPrice() * o.getQuantity())
-                ));
-            
+                        Collectors.summingDouble(o -> o.getPrice() * o.getQuantity())));
+
         return monthlyRevenue.entrySet().stream()
                 .map(entry -> {
                     Map<String, Object> m = new HashMap<>();
@@ -757,5 +781,45 @@ public class Controllers {
             return null;
         }
         return urlString.trim();
+    }
+
+    private void sendMailjetEmail(String toEmail, String toName, String subject, String textPart, String htmlPart)
+            throws MailjetException {
+        String apiKey = System.getenv("MJ_APIKEY_PUBLIC");
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            apiKey = "b505c2cb577f13b674916957787d3735";
+        }
+
+        String apiSecret = System.getenv("MJ_APIKEY_PRIVATE");
+        if (apiSecret == null || apiSecret.trim().isEmpty()) {
+            apiSecret = "5bc6fdb8495c2b8f9e70b633474c9b0f";
+        }
+
+        String senderEmail = System.getenv("MJ_SENDER_EMAIL");
+        if (senderEmail == null || senderEmail.trim().isEmpty()) {
+            senderEmail = "pkumarsaini178@gmail.com";
+        }
+
+        ClientOptions clientOptions = ClientOptions.builder()
+                .apiKey(apiKey)
+                .apiSecretKey(apiSecret)
+                .build();
+        MailjetClient client = new MailjetClient(clientOptions);
+        MailjetRequest request = new MailjetRequest(Emailv31.resource)
+                .property(Emailv31.MESSAGES, new JSONArray()
+                        .put(new JSONObject()
+                                .put(Emailv31.Message.FROM, new JSONObject()
+                                        .put("Email", senderEmail)
+                                        .put("Name", "KSleep Support"))
+                                .put(Emailv31.Message.TO, new JSONArray()
+                                        .put(new JSONObject()
+                                                .put("Email", toEmail)
+                                                .put("Name", toName)))
+                                .put(Emailv31.Message.SUBJECT, subject)
+                                .put(Emailv31.Message.TEXTPART, textPart)
+                                .put(Emailv31.Message.HTMLPART, htmlPart)));
+        MailjetResponse response = client.post(request);
+        System.out.println("✦ Mailjet response status: " + response.getStatus());
+        System.out.println(response.getData());
     }
 }

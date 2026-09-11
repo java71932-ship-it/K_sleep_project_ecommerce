@@ -139,7 +139,7 @@
             </div>
         </div>
 
-       <button type="submit" class="btn">Add Product</button>
+       <button type="submit" id="submitBtn" class="btn">Add Product</button>
 
     </form>
 
@@ -147,6 +147,63 @@
         Professional Product Management © 2026
     </div>
 </div>
+
+<!-- ── SUPABASE STORAGE INTEGRATION ── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://xsxoxvvdnhqkifyqjsdb.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_lGPeQobcmP9zZlCEbMXeDw_HOYWK8S_';
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const productForm = document.querySelector('form');
+  const submitBtn = document.getElementById('submitBtn');
+
+  productForm.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Uploading Images to Supabase... ⏳';
+
+    const fileInputs = [
+      { fileEl: productForm.querySelector('input[name="image1"]'), urlEl: productForm.querySelector('input[name="imageUrl1"]') },
+      { fileEl: productForm.querySelector('input[name="image2"]'), urlEl: productForm.querySelector('input[name="imageUrl2"]') },
+      { fileEl: productForm.querySelector('input[name="image3"]'), urlEl: productForm.querySelector('input[name="imageUrl3"]') },
+      { fileEl: productForm.querySelector('input[name="image4"]'), urlEl: productForm.querySelector('input[name="imageUrl4"]') },
+      { fileEl: productForm.querySelector('input[name="image5"]'), urlEl: productForm.querySelector('input[name="imageUrl5"]') }
+    ];
+
+    for (let i = 0; i < fileInputs.length; i++) {
+      const item = fileInputs[i];
+      if (item.fileEl && item.fileEl.files && item.fileEl.files.length > 0) {
+        const file = item.fileEl.files[0];
+        const safeName = Date.now() + '_' + Math.random().toString(36).substring(2, 6) + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        
+        try {
+          const { data, error } = await supabaseClient.storage
+            .from('product-images')
+            .upload(safeName, file, { cacheControl: '3600', upsert: true });
+
+          if (error) {
+            console.error('Supabase upload error for image ' + (i + 1) + ':', error.message);
+          } else {
+            const { data: publicUrlData } = supabaseClient.storage
+              .from('product-images')
+              .getPublicUrl(safeName);
+
+            if (publicUrlData && publicUrlData.publicUrl) {
+              item.urlEl.value = publicUrlData.publicUrl;
+              item.fileEl.value = ''; // Clear file input so heavy file payload is not sent to server
+            }
+          }
+        } catch (err) {
+          console.error('Upload exception:', err);
+        }
+      }
+    }
+
+    submitBtn.innerText = 'Saving Product... 💾';
+    productForm.submit();
+  });
+</script>
 
 </body>
 </html>

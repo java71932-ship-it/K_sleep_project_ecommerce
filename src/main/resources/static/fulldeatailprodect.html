@@ -377,18 +377,27 @@ function revealAll(){
   }, 300);
 }
 
+// ── ✅ PAYMENT — short URL params + sessionStorage to prevent HTTP 414 error ──
 function goToPayment(){
   if(!productId){ showToast('Product not loaded yet'); return; }
 
   const email = localStorage.getItem("userEmail") || "";
 
+  // Store full product item details in sessionStorage to avoid URI Too Long (HTTP 414)
+  const itemDetails = {
+    id: productId,
+    name: productName,
+    price: productPrice,
+    image: selectedImage || '',
+    qty: qty
+  };
+  sessionStorage.setItem('checkoutItem', JSON.stringify(itemDetails));
+
+  // Short URL cleanly passing only id, qty, and email
   const url = 'paymentgatvey.html'
-    + '?id='    + encodeURIComponent(productId)
-    + '&price=' + encodeURIComponent(productPrice)
-    + '&name='  + encodeURIComponent(productName)
-    + '&image=' + encodeURIComponent(selectedImage)
-    + '&qty='   + encodeURIComponent(qty)
-    + '&email=' + encodeURIComponent(email);
+    + '?id=' + encodeURIComponent(productId)
+    + '&qty=' + encodeURIComponent(qty)
+    + (email ? '&email=' + encodeURIComponent(email) : '');
 
   window.location.href = url;
 }
