@@ -436,7 +436,10 @@ public class Controllers {
             // ✉️ Send Confirmation Email inside Try-Catch (Never crashes API!)
             try {
                 SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom("ae4295001@smtp-brevo.com"); // ⚠️ Brevo Verified Email
+                String fromEmail = System.getenv("SPRING_MAIL_FROM");
+                if (fromEmail != null && !fromEmail.trim().isEmpty()) {
+                    message.setFrom(fromEmail);
+                }
                 message.setTo(email);
                 message.setSubject("Order Confirmed! Your Order is Processing for Delivery 🚚");
                 message.setText("Namaste " + name + "!\n\n" +

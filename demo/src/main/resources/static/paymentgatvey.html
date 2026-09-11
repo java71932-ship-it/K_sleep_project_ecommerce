@@ -369,65 +369,88 @@ for(let i=0;i<18;i++){
 }
 
 // =========================================
-// ✅ READ ALL URL PARAMS & FILL HIDDEN FIELDS
+// ✅ READ URL PARAMS & SESSIONSTORAGE SAFELY
 // =========================================
 window.onload = function() {
   const params = new URLSearchParams(window.location.search);
 
   const id    = params.get('id')    || '';
-  const price = params.get('price') || '';
-  const name  = params.get('name')  || '';
-  let image   = params.get('image') || sessionStorage.getItem('paymentImage') || '';
   const qty   = params.get('qty')   || '1';
+  const email = params.get('email') || localStorage.getItem("userEmail") || '';
 
-  // ✅ Fill ALL hidden form fields
-  document.getElementById('PName').value          = name;
-  document.getElementById('prodectprice').value   = price;
+  let name  = params.get('name')  || '';
+  let price = params.get('price') || '';
+  let image = params.get('image') || sessionStorage.getItem('paymentImage') || '';
+
+  // Try reading from sessionStorage checkoutItem if name/price are missing
+  const storedItemStr = sessionStorage.getItem('checkoutItem');
+  if (storedItemStr) {
+    try {
+      const storedItem = JSON.parse(storedItemStr);
+      if (storedItem) {
+        if (!name && storedItem.name) name = storedItem.name;
+        if (!price && storedItem.price) price = storedItem.price;
+        if (!image && storedItem.image) image = storedItem.image;
+      }
+    } catch (e) {
+      console.error("Error parsing stored checkout item", e);
+    }
+  }
+
+  // Helper function to update summary UI & hidden form fields
+  function updateSummary(pName, pPrice, pImg) {
+    if (pName) {
+      document.getElementById('PName').value = pName;
+      document.getElementById('summaryName').textContent = pName;
+    }
+    if (pPrice) {
+      document.getElementById('prodectprice').value = pPrice;
+      const priceNum = parseFloat(String(pPrice).replace(/,/g,''));
+      const qtyNum   = parseInt(qty) || 1;
+      const total    = (priceNum * qtyNum).toLocaleString('en-IN');
+
+      document.getElementById('summaryPrice').textContent  = '₹' + pPrice;
+      document.getElementById('priceBreakdown').textContent = '₹' + pPrice;
+      document.getElementById('qtyDisplay').textContent    = qty;
+      document.getElementById('totalPrice').textContent    = '₹' + total;
+      document.getElementById('qrNote').textContent        = `Pay ₹${total} for your KSleep order`;
+    }
+    if (pImg) {
+      document.getElementById('productImage').value = pImg;
+      document.getElementById('summaryImg').src     = pImg;
+    }
+  }
+
+  // Set initial form fields
   document.getElementById('productIdField').value = id;
   document.getElementById('qtyField').value       = qty;
 
-  // ✅ Fetch image from backend (same as your original logic)
+  // Render initial data if available
+  updateSummary(name, price, image);
+
+  // ✅ Fetch latest product details from backend if id is provided
   if(id) {
     fetch(`/fechdata/${id}`)
       .then(res => res.json())
       .then(product => {
-        const img = product.image1 || image;
-        document.getElementById('productImage').value = img;
-        document.getElementById('summaryImg').src     = img;
+        const pName  = product.productName || name;
+        const pPrice = product.price || price;
+        const pImg   = product.image1 || image;
+        updateSummary(pName, pPrice, pImg);
       })
-      .catch(() => {
-        // Fallback: use image from URL param or sessionStorage
-        document.getElementById('productImage').value = image;
-        if(image) document.getElementById('summaryImg').src = image;
-      });
-  } else if(image) {
-    document.getElementById('productImage').value = image;
-    document.getElementById('summaryImg').src     = image;
-  }
-
-  // ── Populate order summary UI ──
-  if(name)  document.getElementById('summaryName').textContent = name;
-  if(price) {
-    const priceNum = parseFloat(String(price).replace(/,/g,''));
-    const qtyNum   = parseInt(qty) || 1;
-    const total    = (priceNum * qtyNum).toLocaleString('en-IN');
-
-    document.getElementById('summaryPrice').textContent  = '₹' + price;
-    document.getElementById('priceBreakdown').textContent = '₹' + price;
-    document.getElementById('qtyDisplay').textContent    = qty;
-    document.getElementById('totalPrice').textContent    = '₹' + total;
-    document.getElementById('qrNote').textContent        = `Pay ₹${total} for your KSleep order`;
+      .catch(err => console.error("Error fetching product data", err));
   }
 
   // ✅ Auto-fill email and fetch/fill username
-  const email = params.get('email') || '';
   if (email) {
-    document.querySelector('input[name="email"]').value = email;
+    const emailInput = document.querySelector('input[name="email"]');
+    if (emailInput) emailInput.value = email;
     fetch(`/getUserName?email=${encodeURIComponent(email)}`)
       .then(res => res.text())
       .then(fetchedName => {
         if (fetchedName) {
-          document.querySelector('input[name="username"]').value = fetchedName;
+          const nameInput = document.querySelector('input[name="username"]');
+          if (nameInput) nameInput.value = fetchedName;
         }
       })
       .catch(err => console.error(err));
